@@ -21,7 +21,8 @@
     "md5": "^2.3.0",
     "mongoose": "^6.0.13",
     "mongoose-auto-increment": "^5.0.1",
-    "node-modules": "^1.0.1"
+    "node-modules": "^1.0.1",
+    "serve": "^13.0.2"
   },
   "devDependencies": {
     "nodemon": "^2.0.12"

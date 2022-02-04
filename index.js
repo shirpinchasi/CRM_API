@@ -10,7 +10,7 @@ const port = config.port;
 const db = require("./src/modules/mongoose");
 const Role = db.role;
 app.use(cookieParser());
-
+const PORT = process.env.PORT || 5000
 
 
   app.use(express.json());
@@ -35,7 +35,7 @@ app.get("/", (req, res) => {
 
 
 function listen() {
-    app.listen(port, () => console.log(`server is listaning on port ${port}!`)
+    app.listen(PORT, () => console.log(`server is listaning on port ${PORT}!`)
     );
 }
 db.mongoose
