@@ -125,7 +125,7 @@ app.get("/adminPanel",authJwt.verifyToken,authJwt.isAdmin,(req, res) => {
 
 });
 
-app.get("/user/me",authJwt.verifyToken,authJwt.isAdmin,(req,res)=>{
+app.get("/user/me",authJwt.verifyToken,(req,res)=>{
   res.json(req.user)
 })
 
