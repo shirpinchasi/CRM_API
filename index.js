@@ -13,11 +13,10 @@ app.use(cookieParser());
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 app.use(cors({
-  origin: ["https://crm-ui.herokuapp.com","http://localhost:3000/"],
+  origin: ["https://crm-ui.herokuapp.com","http://localhost:3000"],
   credentials: true
 }));
 
-app.options("*",cors())
 
 app.use(users,calls,systems,cors())
 
