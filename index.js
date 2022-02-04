@@ -25,7 +25,10 @@ app.get("/", (req, res) => {
     res.json({ message: "Welcome to application." });
   });
   
-
+  app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    next();
+  });
   
 
 
