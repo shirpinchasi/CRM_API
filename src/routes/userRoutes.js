@@ -34,7 +34,7 @@ app.post("/user/signup",verifySignUp.checkDuplicateUserNameOrEmail,verifySignUp.
     user.password = crypto.createHash("SHA256").update(user.password).digest("hex");
   user.save((err,user)=>{
     if(err){
-      res.status(500).send({ message: err });
+      res.status(500).send({ message: err + "error saving user" });
       return;
     }
     if(req.body.roles){
@@ -50,7 +50,7 @@ app.post("/user/signup",verifySignUp.checkDuplicateUserNameOrEmail,verifySignUp.
           user.roles = roles.map(role => role._id);
           user.save(err =>{
             if(err){
-              res.status(500).send({ message: err });
+              res.status(500).send({ message: err + "error creating role" });
               return;
             }
             console.log(roles);
@@ -61,13 +61,13 @@ app.post("/user/signup",verifySignUp.checkDuplicateUserNameOrEmail,verifySignUp.
     }else{
       Role.findOne({name:"user"},(err,role)=>{
         if(err){
-          res.status(500).send({ message: err });
+          res.status(500).send({ message: err + "error finding role" });
         return;
         }
         user.roles = [role._id];
         user.save(err=>{
           if(err){
-            res.status(500).send({ message: err });
+            res.status(500).send({ message: err + "error" });
             return;
           }
           res.send("User Registered!")
