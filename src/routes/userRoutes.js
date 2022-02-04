@@ -107,15 +107,7 @@ app.post("/user/login",(req,res,next) =>{
     for(let i=0; i<user.roles.length; i++){
       authorities.push("ROLE_" + user.roles[i].name.toUpperCase());
       }
-      // for(let i=0; i<authorities.length; i++){
-      //   if(!authorities[i].includes("ADMIN")){
-      //     console.log("no admin here");
-      //   }
-      //   // res.redirect("/adminPanel")
-      //   console.log("i have admin");
-      // }
-      
-      // if(authorities)
+
     res.status(200).send({
       _id : user._id,
       userName : user.userName,
@@ -128,10 +120,8 @@ app.post("/user/login",(req,res,next) =>{
 })
 
 app.get("/adminPanel",authJwt.verifyToken,authJwt.isAdmin,(req, res) => {
-  // res.sendStatus(200).send({message : "Success"})
   res.json(req.user)
   res.end()
-  // res.status(200).send(req.user)
 
 });
 
@@ -142,10 +132,6 @@ app.get("/user/me",authJwt.verifyToken,authJwt.isAdmin,(req,res)=>{
 
 app.get("/getUser",(req,res)=> {
   User.find((err, docs)=>{
-
-    // docs.map((doc)=>{
-    //   console.log(doc.userName)
-    // })
     if(!err){
         res.send(docs)
     }else{
