@@ -3,7 +3,6 @@ const app = express()
 const Call = require("../modules/call.model")
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json())
-var url = "mongodb://localhost:27017/";
 var MongoClient = require('mongodb').MongoClient;
 const mongodb = require('mongodb');
 
@@ -45,20 +44,8 @@ app.get('/getCalls/:id', (req, res) => {
 
 })
 
-
-// app.delete('/:id', (req, res) => {
-//   MongoClient.connect(url, (err,db) => {
-//   if (err) throw err;
-//   let dbo = db.db("CRM")
-//   dbo.collection('calls').deleteOne({_id: mongodb.ObjectID( req.params.id)}, (err, result) => {
-//     if (err) return console.log(err)
-//     console.log(req.body)
-
-//   })
-//   })
-// })
 app.put('/updateCall/:id', (req, res) => {
-  MongoClient.connect(url, (err,db) => {
+  MongoClient.connect(process.env.DB_URL, (err,db) => {
   if (err) 
   {
       throw err;
@@ -72,14 +59,6 @@ app.put('/updateCall/:id', (req, res) => {
   })
   })
 })
-
-
-
-
-
-
-
-
 
 
 module.exports = app;

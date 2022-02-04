@@ -1,6 +1,5 @@
 const express = require("express");
 const app = express();
-const config = require("../env/config");
 const bodyParser = require("body-parser")
 app.use(express.urlencoded({extended:false}));
 app.use(express.json());
@@ -101,8 +100,8 @@ app.post("/user/login",(req,res,next) =>{
 
       });
     }
-    const token = jwt.sign({id:user._id}, config.secret);
-    res.cookie(config.cookieName, token, {maxAge : DURATION_60D, secure: true, httpOnly:true, sameSite: 'None'});
+    const token = jwt.sign({id:user._id}, process.env.SECRET);
+    res.cookie(process.env.COOKIE_NAME, token, {maxAge : DURATION_60D, secure: true, httpOnly:true, sameSite: 'None'});
     
     var authorities = [];
     for(let i=0; i<user.roles.length; i++){
@@ -157,80 +156,13 @@ app.get("/getUser",(req,res)=> {
   })
 })
 
-// app.get("/logout", (req, res) => {
-//   console.log('Page requested!');
-//   console.log('Cookies: ', req.headers); // For some reason this returns undefined
-// });
 
 
 app.get('/logOut',(req, res) =>{
-  res.clearCookie(config.cookieName,{path:"/"})
+  res.clearCookie(process.env.COOKIE_NAME,{path:"/"})
    res.end()
-//   res.cookie(config.cookieName, "none",{
-//     expires: new Date(Date.now() +5 *1000),
-//     httpOnly:true,
-//   })
-//   res.status(200)
-//   .json({success : true, message :"logged out successfully"})
+
  });
-// app.get("/protected", auth,(req,res)=>{
-//   return res.json({user: {id: req._id,role: req.role}})
-// })
-// app.post("/user/login", (req, res, next)=>{
-//   const {body} = req;
-//   const {userName} = body;
-//   const {password} = body;
-//   console.log(userName);
-  
-//   if(userName === Users.userName && password === Users.password){
-//       jwt.sign({Users}, "private", {expiresIn : "1h"},(err, token)=>{
-//           if(err) {console.log(err)}
-//           res.send(token);
-//       });
-//   }else{
-//       console.log("ERROR : Could not log in");
-//   }
-// })
-
-
-
-// app.delete('//:id', (req, res) => {
-//   MongoClient.connect(url, (err,db) => {
-//   if (err) throw err;
-//   let dbo = db.db("CRM")
-//   dbo.collection('calls').deleteOne({_id: mongodb.ObjectID( req.params.id)}, (err, result) => {
-//     if (err) return console.log(err)
-//     console.log(req.body)
-    
-//   })
-//   })
-// })
-// app.put('/updateCall/:id', (req, res) => {
-//   MongoClient.connect(url, (err,db) => {
-//   if (err) 
-//   {
-//       throw err;
-//   }
-//   let dbo = db.db("CRM")
-
-//   console.log(req.body);
-//   console.log(req.body.serverName);
-//   dbo.collection('calls').findOneAndUpdate({_id: mongodb.ObjectID(req.params.id)}, (err, result) => {
-//     if (err) 
-//     {
-//       console.log(err)
-//     }
-//   })
-//   })
-// })
-
-
-
-
-
-
-
-
 
 
 module.exports = app;

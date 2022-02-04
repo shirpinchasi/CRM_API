@@ -1,8 +1,8 @@
 const mongoose = require("mongoose");
-const config = require("../env/config")
 const Schema = mongoose.Schema;
+require('dotenv').config({ path: '.env' });
 const autoIncrement = require('mongoose-auto-increment');
-var connection = mongoose.createConnection(config.dbUrl);
+var connection = mongoose.createConnection(process.env.DB_URL);
  
 autoIncrement.initialize(connection);
 

@@ -33,33 +33,5 @@ app.post("/addSystem", (req, res)=>{
       res.sendStatus(500)
   }
 })
-// app.delete('/:id', (req, res) => {
-//   MongoClient.connect(url, (err,db) => {
-//   if (err) throw err;
-//   let dbo = db.db("CRM")
-//   dbo.collection('calls').deleteOne({_id: mongodb.ObjectID( req.params.id)}, (err, result) => {
-//     if (err) return console.log(err)
-//     console.log(req.body)
 
-//   })
-//   })
-// })
-// app.put('/updateCall/:id', (req, res) => {
-//   MongoClient.connect(url, (err,db) => {
-//   if (err) 
-//   {
-//       throw err;
-//   }
-//   let dbo = db.db("CRM")
-
-//   console.log(req.body);
-//   console.log(req.body.serverName);
-//   dbo.collection('calls').findOneAndUpdate({_id: mongodb.ObjectID(req.params.id)}, (err, result) => {
-//     if (err) 
-//     {
-//       console.log(err)
-//     }
-//   })
-//   })
-// })
 module.exports = app;

@@ -1,16 +1,13 @@
 const express = require("express");
 const app=express();
 const cookieParser = require('cookie-parser')
-const config = require("./src/env/config");
 const calls = require("./src/routes/callRoutes");
 const users = require("./src/routes/userRoutes");
 const systems = require("./src/routes/systemRoutes");
 const cors = require("cors");
-const port = config.port;
 const db = require("./src/modules/mongoose");
 const Role = db.role;
 app.use(cookieParser());
-const PORT = process.env.PORT || 5000
 
 
   app.use(express.json());
@@ -35,11 +32,11 @@ app.get("/", (req, res) => {
 
 
 function listen() {
-    app.listen(PORT, () => console.log(`server is listaning on port ${PORT}!`)
+    app.listen(process.env.PORT, () => console.log(`server is listaning on port ${process.env.PORT}!`)
     );
 }
 db.mongoose
-    .connect(config.dbUrl,{
+    .connect(process.env.DB_URL,{
         useNewUrlParser: true,
         useUnifiedTopology : true
     })
@@ -75,12 +72,4 @@ function initial(){
         }
     })
 }
-// function connect() {
-//     mongoose.connect(config.dbUrl, {
-//         useNewUrlParser: true,
-//         useUnifiedTopology : true
-//     });
-//     const db = mongoose.connection;
-//     db.on("error", err => console.log(err));
-//     db.once("open", listen,console.log("opening db"));
-// }
+
