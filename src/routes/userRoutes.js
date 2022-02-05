@@ -1,10 +1,9 @@
 const express = require("express");
 const app = express();
 const bodyParser = require("body-parser")
-
 app.use(express.json());
-// app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 const cookieParser = require('cookie-parser')
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
@@ -15,7 +14,7 @@ const db = require("../modules/mongoose");
 const User = db.user;
 const Role = db.role;
 const DURATION_60D =  60 * 60 * 24 * 60 * 1000;
-
+require("dotenv").config();
 
 
 app.use(function(req,res,next){
