@@ -14,7 +14,7 @@ const db = require("../modules/mongoose");
 const User = db.user;
 const Role = db.role;
 const DURATION_60D =  60 * 60 * 24 * 60 * 1000;
-require("dotenv").config();
+require('dotenv').config({ path: '.env' });
 
 
 app.use(function(req,res,next){
