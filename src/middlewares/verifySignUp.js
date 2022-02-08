@@ -1,14 +1,14 @@
 const db = require("../modules/mongoose");
 const ROLES = db.ROLES;
 const User = db.user;
-
+const validator = require("email-validator")
 
 checkDuplicateUserNameOrEmail = (req,res,next)=>{
     User.findOne({
         userName : req.body.userName
     }).exec((err,user)=>{
-        if(err){
-            res.status(500).send({ message: err });
+        if(!req.body.userName){
+            res.status(500).send({ message: "UserName Is Required!" });
             return;
         }
         if(user){
@@ -19,12 +19,12 @@ checkDuplicateUserNameOrEmail = (req,res,next)=>{
 
         User.findOne({
             email : req.body.email
-        }).exec((err,user)=>{
-            if(err){
-                res.status(500).send({ message: err });
+        }).exec((err,email)=>{
+            if(!req.body.email){
+                res.status(500).send({ message: "You Need To Provide Email!" });
                 return;
             }
-            if(user){
+            if(email){
                 res.status(400).send({ message: "Failed! Email is already in use!" });
                 return;  
             }

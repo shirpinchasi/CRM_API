@@ -13,8 +13,8 @@ app.use(cookieParser());
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 app.use(cors({
-  origin: "*",
-//   credentials: true
+  origin: true,
+  credentials: true
 }));
 
 
@@ -26,7 +26,7 @@ app.get("/", (req, res) => {
   });
   
   app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Origin', '*');
     next();
   });
   

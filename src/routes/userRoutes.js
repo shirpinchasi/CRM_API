@@ -18,16 +18,16 @@ require('dotenv').config({ path: '.env' });
 const cors = require("cors");
 
 app.use(cors({
-  origin: "*",
-//   credentials: true
+  origin: true,
+  credentials: true
 }));
 
 
 app.use(function(req,res,next){
-  res.header(
-      "Access-Control-Allow-Headers",
-      "x-access-token, Origin, Content-Type, Accept",
-      'Access-Control-Allow-Origin', '*'
+  res.setHeader(
+      'Access-Control-Allow-Headers',
+      'x-access-token, Origin, Content-Type, Accept',
+      'Access-Control-Allow-Origin', 'true'
   );
   next();
 });
@@ -41,7 +41,7 @@ app.post("/user/signup",verifySignUp.checkDuplicateUserNameOrEmail,verifySignUp.
     
   user.save((err,user)=>{
     if(err){
-      res.status(500).send({ message: err + "error saving user" });
+      res.status(500).send({ message: "You Need To Provide User Name!"});
       return;
     }
     if(req.body.roles){
@@ -60,7 +60,6 @@ app.post("/user/signup",verifySignUp.checkDuplicateUserNameOrEmail,verifySignUp.
               res.status(500).send({ message: err + "error creating role" });
               return;
             }
-            console.log(roles);
             res.send({message : "User Registered!"})
           });
         }
@@ -108,8 +107,7 @@ app.post("/user/login",(req,res,next) =>{
       });
     }
     const token = jwt.sign({id:user._id}, process.env.SECRET);
-    res.cookie(process.env.COOKIE_NAME, token, {maxAge : DURATION_60D, secure: true, httpOnly:true, sameSite: 'None'});
-    
+    res.cookie(process.env.COOKIE_NAME, token, {maxAge : DURATION_60D, secure: true, httpOnly:true, sameSite: 'lax'});
     var authorities = [];
     for(let i=0; i<user.roles.length; i++){
       authorities.push("ROLE_" + user.roles[i].name.toUpperCase());
@@ -120,7 +118,7 @@ app.post("/user/login",(req,res,next) =>{
       userName : user.userName,
       email : user.email,
       roles : authorities,
-      accessToken : token,
+      user : token,
     })
     
   })
@@ -133,6 +131,7 @@ app.get("/adminPanel",authJwt.verifyToken,authJwt.isAdmin,(req, res) => {
 });
 
 app.get("/user/me",authJwt.verifyToken,(req,res)=>{
+  console.log(req.cookies);
   res.json(req.user)
 })
 
