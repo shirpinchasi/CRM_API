@@ -107,7 +107,7 @@ app.post("/user/login",(req,res,next) =>{
       });
     }
     const token = jwt.sign({id:user._id}, process.env.SECRET);
-    res.cookie(process.env.COOKIE_NAME, token, {maxAge : DURATION_60D, secure: true, httpOnly:true, sameSite: 'lax'});
+    res.cookie(process.env.COOKIE_NAME, token, {maxAge : DURATION_60D, secure: true, httpOnly:true, sameSite: 'none'});
     var authorities = [];
     for(let i=0; i<user.roles.length; i++){
       authorities.push("ROLE_" + user.roles[i].name.toUpperCase());
