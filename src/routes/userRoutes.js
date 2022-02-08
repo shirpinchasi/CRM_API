@@ -150,9 +150,8 @@ app.get("/getUser",(req,res)=> {
 
 
 app.get('/logOut',(req, res) =>{
-  res.clearCookie(process.env.COOKIE_NAME,{path:"/"})
+  res.clearCookie(process.env.COOKIE_NAME,{path:"/",domain:"crm--api.herokuapp.com"})
    res.end()
-
  });
 
 
