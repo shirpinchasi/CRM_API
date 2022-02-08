@@ -57,10 +57,10 @@ app.post("/user/signup",verifySignUp.checkDuplicateUserNameOrEmail,verifySignUp.
           user.roles = roles.map(role => role._id);
           user.save(err =>{
             if(err){
-              res.status(500).send({ message: err + "error creating role" });
+              res.status(500).send({ message:  "error creating role" });
               return;
             }
-            res.send({message : "User Registered!"})
+            res.status(201).send({ message: "User Registered!"});
           });
         }
       );
@@ -73,10 +73,10 @@ app.post("/user/signup",verifySignUp.checkDuplicateUserNameOrEmail,verifySignUp.
         user.roles = [role._id];
         user.save(err=>{
           if(err){
-            res.status(500).send({ message: err + "error" });
+            res.status(500).send({ message: "error" });
             return;
           }
-          res.send("User Registered!")
+          res.status(201).send({ message: "User Registered!"});
         });
       });
     }
@@ -131,7 +131,6 @@ app.get("/adminPanel",authJwt.verifyToken,authJwt.isAdmin,(req, res) => {
 });
 
 app.get("/user/me",authJwt.verifyToken,(req,res)=>{
-  console.log(req.cookies);
   res.json(req.user)
 })
 
