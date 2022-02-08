@@ -151,7 +151,7 @@ app.get("/getUser",(req,res)=> {
 
 app.get('/logOut',(req, res) =>{
   res.clearCookie(process.env.COOKIE_NAME)
-   res.end()
+  res.send('cookie foo cleared');
  });
 
 
