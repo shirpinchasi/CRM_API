@@ -99,17 +99,17 @@ app.post("/user/login",(req,res,next) =>{
       res.status(500).send({ message: err });
       return;
     }
-    if(!user){
-      return res.status(401).send({message : "Username or Password is Incorrect"});
-    }
-    if (user.validPassword(req.body.password)) {
-      if(!user.validPassword(req.body.password)){
-        return res.status(401).send({ 
-          message : "Username or Password is Incorrect", 
-      })
+    if(user === null){
+      return res.status(400).send({message : "Username or Password is Incorrect"});
+    }else{
+      if (user.validPassword(req.body.password) === false) {
+          return res.status(401).send({ 
+            message : "Username or Password is Incorrect", 
+        })
       }
-      
     }
+   
+    
     const token = jwt.sign({id:user._id}, process.env.SECRET);
     res.cookie(process.env.COOKIE_NAME, token, {maxAge : DURATION_60D, secure: true, httpOnly:true, sameSite: 'none'});
     var authorities = [];

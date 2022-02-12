@@ -6,7 +6,6 @@ const UserSchema =  mongoose.Schema({
         type: String,
     },
     hash : String,
-    salt : String,
     // password : {
     //     type : String,
     //     required : true,
@@ -43,14 +42,13 @@ const UserSchema =  mongoose.Schema({
 });
 
 UserSchema.methods.setPassword = function(password) { 
-     
-       this.salt = crypto.randomBytes(16).toString('hex'); 
-       this.hash = crypto.pbkdf2Sync(password, this.salt,  
+    
+       this.hash = crypto.pbkdf2Sync(password, process.env.SECRET,  
        100000, 64, `sha512`).toString(`hex`); 
    }; 
    UserSchema.methods.validPassword = function(password) { 
        var hash = crypto.pbkdf2Sync(password,  
-       this.salt, 100000, 64, `sha512`).toString(`hex`); 
+        process.env.SECRET, 100000, 64, `sha512`).toString(`hex`); 
        return this.hash === hash; 
    }; 
 
