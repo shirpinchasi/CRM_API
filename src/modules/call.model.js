@@ -8,13 +8,15 @@ autoIncrement.initialize(connection);
 
 var Calls = new Schema({
     _id : {
-        type : Number
+        type : Number,
     },
     system: {
-        type: String
+        type: String,
+        required:true
     },
     userName: {
-        type: String
+        type: String,
+        required:true
     },
     goremMetapel: {
         type: String

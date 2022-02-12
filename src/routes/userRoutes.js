@@ -7,6 +7,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 const cookieParser = require('cookie-parser')
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const bcrypt = require("bcrypt")
 const {verifySignUp} = require("../middlewares/export")
 app.use(cookieParser());
 const authJwt = require("../helpers/auth")
@@ -16,6 +17,7 @@ const Role = db.role;
 const DURATION_60D =  60 * 60 * 24 * 60 * 1000;
 require('dotenv').config({ path: '.env' });
 const cors = require("cors");
+
 
 app.use(cors({
   origin: true,
@@ -37,7 +39,8 @@ app.use(function(req,res,next){
 app.post("/user/signup",verifySignUp.checkDuplicateUserNameOrEmail,verifySignUp.checkRolesExisted,(req,res)=>{
   const user = new User(req.body);
   user.email = req.body.email
-  user.password = crypto.createHash("SHA256").update(user.password).digest("hex");
+  user.password = req.body.password
+  user.setPassword(req.body.password);
     
   user.save((err,user)=>{
     if(err){
@@ -71,6 +74,7 @@ app.post("/user/signup",verifySignUp.checkDuplicateUserNameOrEmail,verifySignUp.
         return;
         }
         user.roles = [role._id];
+
         user.save(err=>{
           if(err){
             res.status(500).send({ message: "error" });
@@ -98,13 +102,13 @@ app.post("/user/login",(req,res,next) =>{
     if(!user){
       return res.status(401).send({message : "Username or Password is Incorrect"});
     }
-    var passwordIsValid = crypto.createHash("SHA256").update(req.body.password).digest("hex")  == user.password
-    if(!passwordIsValid){
-      return res.status(401).send({
-        accessToken : null,
-        message : "Username or Password is Incorrect",
-
-      });
+    if (user.validPassword(req.body.password)) {
+      if(!user.validPassword(req.body.password)){
+        return res.status(401).send({ 
+          message : "Username or Password is Incorrect", 
+      })
+      }
+      
     }
     const token = jwt.sign({id:user._id}, process.env.SECRET);
     res.cookie(process.env.COOKIE_NAME, token, {maxAge : DURATION_60D, secure: true, httpOnly:true, sameSite: 'none'});
@@ -112,12 +116,7 @@ app.post("/user/login",(req,res,next) =>{
     for(let i=0; i<user.roles.length; i++){
       authorities.push("ROLE_" + user.roles[i].name.toUpperCase());
       }
-
     res.status(200).send({
-      _id : user._id,
-      userName : user.userName,
-      email : user.email,
-      roles : authorities,
       user : token,
     })
     
