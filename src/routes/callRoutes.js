@@ -5,11 +5,12 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json())
 var MongoClient = require('mongodb').MongoClient;
 const mongodb = require('mongodb');
+const authJwt = require("../helpers/auth")
 
-
-app.get("/getCalls",(req,res)=> {
+app.get("/getCalls",authJwt.verifyToken,(req,res)=> {
   Call.find((err, docs)=>{
     if(!err){
+      console.log(docs);
         res.send(docs);
     }else{
       res.sendStatus(409)
@@ -18,7 +19,7 @@ app.get("/getCalls",(req,res)=> {
 
   })
 })
-app.post("/addCall", (req, res)=>{
+app.post("/addCall",authJwt.verifyToken,authJwt.isAdmin, (req, res)=>{
   const newCall = new Call(req.body);
   try{
       const createCall =  newCall.save();
@@ -33,8 +34,8 @@ app.post("/addCall", (req, res)=>{
 })
 
 
-app.get('/getCalls/:id', (req, res) => {
-  Call.findById(req.params.id).then((call)=>{
+app.get('/getCalls/:id',authJwt.verifyToken, (req, res) => {
+   Call.findById(req.params.id).then((call)=>{
     if(!call){
       return res.status(404).send
     }res.send({call});
@@ -44,7 +45,7 @@ app.get('/getCalls/:id', (req, res) => {
 
 })
 
-app.put('/updateCall/:id', (req, res) => {
+app.put('/updateCall/:id',authJwt.verifyToken,authJwt.isAdmin, (req, res) => {
   MongoClient.connect(process.env.DB_URL, (err,db) => {
   if (err) 
   {

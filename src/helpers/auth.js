@@ -24,8 +24,8 @@ async function verifyToken(req,res,next){
 };
 
 
-async function isAdmin (req,res,next){
- await User.findById(req.user._id).exec((err,user)=>{
+ function isAdmin (req,res,next){
+  User.findById(req.user._id).exec((err,user)=>{
     if(err){
       res.status(500).send({ message: err });
       return;

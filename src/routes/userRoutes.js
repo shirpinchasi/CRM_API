@@ -5,9 +5,7 @@ app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 const cookieParser = require('cookie-parser')
-const jwt = require("jsonwebtoken");
-const crypto = require("crypto");
-const bcrypt = require("bcrypt")
+const jwt = require("jsonwebtoken")
 const {verifySignUp} = require("../middlewares/export")
 app.use(cookieParser());
 const authJwt = require("../helpers/auth")
@@ -117,11 +115,24 @@ app.post("/user/login",(req,res,next) =>{
       authorities.push("ROLE_" + user.roles[i].name.toUpperCase());
       }
     res.status(200).send({
+      userName : user.userName,
       user : token,
     })
     
   })
 })
+
+app.get('/getUser/:id',authJwt.verifyToken, (req, res) => {
+  User.findById(req.params.id).then((user)=>{
+    if(!user){
+      return res.status(404).send
+    }res.send({user});
+     }).catch(()=>{
+      res.status(404).send({message : "user not found "})
+  })
+
+})
+
 
 app.get("/adminPanel",authJwt.verifyToken,authJwt.isAdmin,(req, res) => {
   res.json(req.user)
@@ -134,7 +145,7 @@ app.get("/user/me",authJwt.verifyToken,(req,res)=>{
 })
 
 
-app.get("/getUser",(req,res)=> {
+app.get("/getUser",authJwt.verifyToken,(req,res)=> {
   User.find((err, docs)=>{
     if(!err){
         res.send(docs)

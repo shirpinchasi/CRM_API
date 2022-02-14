@@ -1,5 +1,10 @@
 const mongoose = require("mongoose");
 const crypto = require("crypto");
+const autoIncrement = require('mongoose-auto-increment');
+var connection = mongoose.createConnection(process.env.DB_URL);
+autoIncrement.initialize(connection);
+
+
 
 const UserSchema =  mongoose.Schema({
     role: {
@@ -40,6 +45,12 @@ const UserSchema =  mongoose.Schema({
         }
     ]
 });
+UserSchema.plugin(autoIncrement.plugin, {
+    model: 'UserSchema',
+    field: 'employeeId',
+    startAt : 1
+});
+
 
 UserSchema.methods.setPassword = function(password) { 
     
