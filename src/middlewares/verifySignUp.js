@@ -1,7 +1,6 @@
 const db = require("../modules/mongoose");
 const ROLES = db.ROLES;
 const User = db.user;
-const validator = require("email-validator")
 
 checkDuplicateUserNameOrEmail = (req,res,next)=>{
     User.findOne({
