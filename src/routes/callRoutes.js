@@ -10,7 +10,6 @@ const authJwt = require("../helpers/auth")
 app.get("/getCalls",authJwt.verifyToken,(req,res)=> {
   Call.find((err, docs)=>{
     if(!err){
-      console.log(docs);
         res.send(docs);
     }else{
       res.sendStatus(409)
