@@ -137,7 +137,7 @@ app.get('/getUser/:id', authJwt.verifyToken, (req, res) => {
 
 
 app.get("/adminPanel", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
-  res.json(req.user)
+  res.send({data: req.user, redirectUrl :"/adminPanel"})
   res.end()
 
 });
