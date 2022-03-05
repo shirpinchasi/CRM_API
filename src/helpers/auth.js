@@ -4,50 +4,50 @@ const User = db.user;
 const Role = db.role;
 
 
-async function verifyToken(req,res,next){
+async function verifyToken(req, res, next) {
   const token = req.cookies[process.env.COOKIE_NAME];
-  if(!token){
-    return res.status(403).send({messege : "no token found"})
+  if (!token) {
+    return res.status(403).send({ messege: "no token found" })
   }
-  try{
-    const payload = jwt.verify(token,process.env.SECRET);
+  try {
+    const payload = jwt.verify(token, process.env.SECRET);
     const user = await User.findById(payload.id);
-    if(!user){
-      return res.status(403).send({messege : "unauthorized"})
-      
+    if (!user) {
+      return res.status(403).send({ messege: "unauthorized" })
+
     }
     req.user = user;
     next();
-  }catch(err){
+  } catch (err) {
     res.sendStatus(403)
   }
 };
 
 
- function isAdmin (req,res,next){
-  User.findById(req.user._id).exec((err,user)=>{
-    if(err){
+function isAdmin(req, res, next) {
+  User.findById(req.user._id).exec((err, user) => {
+    if (err) {
       res.status(500).send({ message: err });
       return;
     }
     Role.find(
       {
-        _id : {$in: user.roles}
+        _id: { $in: user.roles }
       },
-      (err,roles)=>{
-        if(err){
-          
+      (err, roles) => {
+        if (err) {
+
           res.status(500).send({ message: err });
           return;
         }
-        for(let i=0; i< roles.length; i++){
-          if(roles[i].name === "admin"){
-            
+        for (let i = 0; i < roles.length; i++) {
+          if (roles[i].name === "admin") {
+
             next();
             return;
           }
         }
-        res.status(403).send({sendStatus : 403, message: "Require Admin Role!" });
+        res.status(403).send({ sendStatus: 403, message: "Require Admin Role!" });
       }
     )
   })

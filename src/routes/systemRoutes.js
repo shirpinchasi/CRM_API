@@ -7,30 +7,30 @@ const authJwt = require("../helpers/auth")
 
 
 
-app.get("/system",authJwt.verifyToken,(req,res)=> {
-  System.find((err, docs)=>{
-    if(!err){
-        res.send(docs);
-    }else{
+app.get("/system", authJwt.verifyToken, (req, res) => {
+  System.find((err, docs) => {
+    if (!err) {
+      res.send(docs);
+    } else {
       res.sendStatus(409)
-        console.log("not getting info : " +err);
+      console.log("not getting info : " + err);
     }
 
   })
 })
 
 
-app.post("/addSystem",authJwt.verifyToken,authJwt.isAdmin, (req, res)=>{
+app.post("/addSystem", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
   const newSystem = new System(req.body);
-  try{
-      const createSystem =  newSystem.save();
-      res.status(201).json(createSystem);
-  }catch(err){
-      if(err.code === 11000){
-          res.sendStatus(409);
-          return;
-      }
-      res.sendStatus(500)
+  try {
+    const createSystem = newSystem.save();
+    res.status(201).json(createSystem);
+  } catch (err) {
+    if (err.code === 11000) {
+      res.sendStatus(409);
+      return;
+    }
+    res.sendStatus(500)
   }
 })
 

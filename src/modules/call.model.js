@@ -39,7 +39,7 @@ var Calls = new Schema({
     },
     picture: {
         data: Buffer,
-        contentType:String,
+        contentType: String,
         type: Object,
         default: () => moment().format("d/MM/YYYY, hh:mm:ss a")
 

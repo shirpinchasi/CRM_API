@@ -7,11 +7,11 @@ autoIncrement.initialize(connection);
 
 
 
-const UserSchema =  mongoose.Schema({
+const UserSchema = mongoose.Schema({
     role: {
         type: String,
     },
-    hash : String,
+    hash: String,
     // password : {
     //     type : String,
     //     required : true,
@@ -21,7 +21,7 @@ const UserSchema =  mongoose.Schema({
     },
     userName: {
         type: String,
-        required : true,
+        required: true,
     },
     firstName: {
         type: String
@@ -31,44 +31,44 @@ const UserSchema =  mongoose.Schema({
     },
     status: {
         type: String,
-        default:() => "Active"
+        default: () => "Active"
     },
-    email :{
-        type:String
+    email: {
+        type: String
     },
     openingDate: {
         type: String,
         default: () => moment().format("d/MM/YYYY, hh:mm:ss a")
     },
-    roles : [
+    roles: [
         {
-            type : String,
-            ref : "Role"
+            type: String,
+            ref: "Role"
         }
     ],
-    team : [
+    team: [
         {
-            type:String,
-            ref : "Team"
+            type: String,
+            ref: "Team"
         }
     ]
 });
 UserSchema.plugin(autoIncrement.plugin, {
     model: 'UserSchema',
     field: 'employeeId',
-    startAt : 1
+    startAt: 1
 });
 
 
-UserSchema.methods.setPassword = function(password) { 
-    
-       this.hash = crypto.pbkdf2Sync(password, process.env.SECRET,  
-       100000, 64, `sha512`).toString(`hex`); 
-   }; 
-   UserSchema.methods.validPassword = function(password) { 
-       var hash = crypto.pbkdf2Sync(password,  
-        process.env.SECRET, 100000, 64, `sha512`).toString(`hex`); 
-       return this.hash === hash; 
-   }; 
+UserSchema.methods.setPassword = function (password) {
+
+    this.hash = crypto.pbkdf2Sync(password, process.env.SECRET,
+        100000, 64, `sha512`).toString(`hex`);
+};
+UserSchema.methods.validPassword = function (password) {
+    var hash = crypto.pbkdf2Sync(password,
+        process.env.SECRET, 100000, 64, `sha512`).toString(`hex`);
+    return this.hash === hash;
+};
 
 const User = module.exports = mongoose.model('User', UserSchema); 
