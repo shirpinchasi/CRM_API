@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const crypto = require("crypto");
+var moment = require('moment');
 const autoIncrement = require('mongoose-auto-increment');
 var connection = mongoose.createConnection(process.env.DB_URL);
 autoIncrement.initialize(connection);
@@ -29,19 +30,26 @@ const UserSchema =  mongoose.Schema({
         type: String
     },
     status: {
-        type: String
+        type: String,
+        default:() => "Active"
     },
     email :{
         type:String
     },
     openingDate: {
-        type: Date,
-        default: () => new Date()
+        type: String,
+        default: () => moment().format("d/MM/YYYY, hh:mm:ss a")
     },
     roles : [
         {
             type : String,
             ref : "Role"
+        }
+    ],
+    team : [
+        {
+            type:String,
+            ref : "Team"
         }
     ]
 });

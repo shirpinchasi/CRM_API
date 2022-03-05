@@ -4,6 +4,7 @@ const cookieParser = require('cookie-parser')
 const calls = require("./src/routes/callRoutes");
 const users = require("./src/routes/userRoutes");
 const systems = require("./src/routes/systemRoutes");
+const teams = require("./src/routes/teamRoutes")
 const cors = require("cors");
 const db = require("./src/modules/mongoose");
 const Role = db.role;
@@ -18,7 +19,7 @@ app.use(cors({
 }));
 
 
-app.use(cors(),users,calls,systems)
+app.use(cors(),users,calls,systems,teams)
 
 
 app.get("/", (req, res) => {

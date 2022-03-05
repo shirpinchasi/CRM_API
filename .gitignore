@@ -1,1 +1,6 @@
 .env
+node_modules
+.idea
+.vscode
+public
+!public/pictures/.gitkeep

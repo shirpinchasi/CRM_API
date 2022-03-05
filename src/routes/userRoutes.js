@@ -78,7 +78,7 @@ app.post("/user/signup",verifySignUp.checkDuplicateUserNameOrEmail,verifySignUp.
             res.status(500).send({ message: "error" });
             return;
           }
-          res.status(201).send({ message: "User Registered!"});
+          return res.status(201).send({redirectUrl:"/Login", message: "User Registered!"});
         });
       });
     }
@@ -108,19 +108,21 @@ app.post("/user/login",(req,res,next) =>{
     }
    
     
-    const token = jwt.sign({id:user._id}, process.env.SECRET);
-    res.cookie(process.env.COOKIE_NAME, token, {maxAge : DURATION_60D, secure: true, httpOnly:true, sameSite: 'none'});
+    const token = jwt.sign({id:user._id}, process.env.SECRET,{expiresIn:DURATION_60D});
+    res.cookie(process.env.COOKIE_NAME, token, {maxAge : DURATION_60D , secure: true, httpOnly:true, sameSite: 'none'});
     var authorities = [];
     for(let i=0; i<user.roles.length; i++){
       authorities.push("ROLE_" + user.roles[i].name.toUpperCase());
       }
-    res.status(200).send({
+      
+    return res.status(200).send({
       userName : user.userName,
       user : token,
+      redirectUrl:"/"
     })
-    
   })
 })
+
 
 app.get('/getUser/:id',authJwt.verifyToken, (req, res) => {
   User.findById(req.params.id).then((user)=>{
@@ -145,7 +147,7 @@ app.get("/user/me",authJwt.verifyToken,(req,res)=>{
 })
 
 
-app.get("/getUser",authJwt.verifyToken,(req,res)=> {
+app.get("/getUser",authJwt.verifyToken,authJwt.isAdmin,(req,res)=> {
   User.find((err, docs)=>{
     if(!err){
         res.send(docs)
@@ -161,7 +163,7 @@ app.get("/getUser",authJwt.verifyToken,(req,res)=> {
 
 app.get('/logOut',(req, res) =>{
   res.clearCookie(process.env.COOKIE_NAME,{sameSite:"none",secure:true})
-  res.send('cookie cleared');
+  res.send({message :'cookie cleared', redirectUrl : "/Login"});
  });
 
 
