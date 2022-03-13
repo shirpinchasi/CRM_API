@@ -15,6 +15,7 @@ const Role = db.role;
 const DURATION_60D = 60 * 60 * 24 * 60 * 1000;
 require('dotenv').config({ path: '.env' });
 const cors = require("cors");
+var validator = require('validator');
 
 
 app.use(cors({
@@ -31,7 +32,6 @@ app.use(function (req, res, next) {
   );
   next();
 });
-
 
 
 app.post("/user/signup", verifySignUp.checkDuplicateUserNameOrEmail, verifySignUp.checkRolesExisted, (req, res) => {
@@ -101,7 +101,7 @@ app.post("/user/login", (req, res, next) => {
         return res.status(400).send({ message: "Username or Password is Incorrect" });
       } else {
         if (user.validPassword(req.body.password) === false) {
-          return res.status(401).send({
+          return res.status(400).send({
             message: "Username or Password is Incorrect",
           })
         }

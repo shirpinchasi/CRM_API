@@ -14,6 +14,13 @@ var Teams = new Schema({
     teamName: {
         type: String
     },
+    teamMembers: [
+        {
+            userName : String,
+            type: String,
+            ref: "User"
+        }
+    ],
     openingDate: {
         type: String,
         default: () => moment().format("d/MM/YYYY, hh:mm:ss a")

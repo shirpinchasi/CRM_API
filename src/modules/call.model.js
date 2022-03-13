@@ -20,11 +20,16 @@ var Calls = new Schema({
         required: true
     },
     assignee: {
-        type: String
+        type: String,
+        ref:"User"
     },
     team: {
         type: String,
         ref: "Team"
+    },
+    user: {
+        type: String,
+        ref: "Users"
     },
     status: {
         type: String,

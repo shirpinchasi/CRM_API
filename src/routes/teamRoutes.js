@@ -18,7 +18,7 @@ app.get("/getTeams", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
 
   })
 })
-app.post("/addTeam", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
+app.post("/addTeam",  (req, res) => {
   const newTeam = new Team(req.body);
   try {
     const createTeam = newTeam.save();

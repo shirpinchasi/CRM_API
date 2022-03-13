@@ -46,10 +46,15 @@ const UserSchema = mongoose.Schema({
             ref: "Role"
         }
     ],
-    team: [
+    team: 
         {
             type: String,
             ref: "Team"
+        },
+    calls: [
+        {
+            type: String,
+            ref: "Calls"
         }
     ]
 });
