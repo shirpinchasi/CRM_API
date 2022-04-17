@@ -15,7 +15,7 @@ var nodemailer = require('nodemailer');
 const db = require("../modules/mongoose");
 const User = db.user
 const hbs = require("nodemailer-express-handlebars")
-const path = require("path")
+// const path = require("path")
 require('dotenv').config({ path: '.env' });
 
 let transport = nodemailer.createTransport({
@@ -75,14 +75,14 @@ app.post("/addCall",authJwt.verifyToken, (req, res) => {
 
 // })
 
-const handleOptions = {
-  viewEngine :{
-    layoutsDir: path.resolve("./views/"),
-    partialDir : path.resolve("./views/"),
-    defaulLayout :"main",
-  },
-  viewPath : path.resolve("./views/")
-};
+// const handleOptions = {
+//   viewEngine :{
+//     layoutsDir: path.resolve("./views/"),
+//     partialDir : path.resolve("./views/"),
+//     defaulLayout :"main",
+//   },
+//   viewPath : path.resolve("./views/")
+// };
 console.log(handleOptions);
 
 transport.use("compile",hbs(handleOptions))
