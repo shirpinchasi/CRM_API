@@ -34,7 +34,7 @@
     "validator": "^13.7.0"
   },
   "devDependencies": {
-    "async": "^1.5.0",
+    "async": "^2.6.4",
     "nodemon": "^2.0.12"
   }
 }
