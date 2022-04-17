@@ -113,12 +113,16 @@ app.post("/user/login", (req, res, next) => {
       res.cookie(process.env.COOKIE_NAME, token, { maxAge: DURATION_60D, secure: true, httpOnly: true, sameSite: 'none' });
       var authorities = [];
       for (let i = 0; i < user.roles.length; i++) {
+        console.log(user.roles);
         authorities.push("ROLE_" + user.roles[i].name.toUpperCase());
       }
+      
+      console.log(authorities);
       if(user.status === "Not Active"){
         res.status(401).send({message:"your account has been disabled"})
       }else if(authorities.includes("ROLE_ADMIN")){
         return res.status(200).send({
+          message:"this is admin",
           userName: user.userName,
           user: token,
           redirectUrl: "/adminPanel"
