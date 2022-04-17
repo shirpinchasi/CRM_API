@@ -64,9 +64,6 @@ app.post("/addCall",authJwt.verifyToken, (req, res) => {
     }
     res.sendStatus(500)
   }
-
-
-
 // User.findOne({ userName: req.user.userName }, function(error, user) {
 //   if (error) {
 //     return handleError(error);
