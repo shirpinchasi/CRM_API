@@ -75,14 +75,14 @@ app.post("/addCall",authJwt.verifyToken, (req, res) => {
 
 // })
 
-// const handleOptions = {
-//   viewEngine :{
-//     layoutsDir: path.resolve("./views/"),
-//     partialDir : path.resolve("./views/"),
-//     defaulLayout :"main",
-//   },
-//   viewPath : path.resolve("./views/")
-// };
+const handleOptions = {
+  viewEngine :{
+    layoutsDir: path.resolve("./views/"),
+    partialDir : path.resolve("./views/"),
+    defaulLayout :"main",
+  },
+  viewPath : path.resolve("./views/")
+};
 console.log(handleOptions);
 
 transport.use("compile",hbs(handleOptions))
