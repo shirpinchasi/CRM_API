@@ -35,7 +35,6 @@ app.use(function (req, res, next) {
   next();
 });
 
-
 app.post("/user/signup", verifySignUp.checkDuplicateUserNameOrEmail, verifySignUp.checkRolesExisted, (req, res) => {
   const user = new User(req.body);
   user.email = req.body.email
