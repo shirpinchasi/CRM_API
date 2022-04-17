@@ -8,7 +8,7 @@ const app = express();
 async function verifyToken(req, res, next) {
   const token = req.cookies[process.env.COOKIE_NAME];
   if (!token) {
-    return res.status(404).send({ messege: "no token found" })
+    return res.status(403).send({ messege: "no token found" })
   }
   try {
     const payload = jwt.verify(token, process.env.SECRET);
