@@ -142,7 +142,6 @@ app.get('/getCalls/:CallId', authJwt.verifyToken, (req, res) => {
   })
 
 })
-
 app.put('/uploadPicture/:id', upload.single("File"), authJwt.verifyToken, (req, res, next) => {
   var img = fs.readFileSync(req.file.path);
   var encode_image = img.toString('base64');
