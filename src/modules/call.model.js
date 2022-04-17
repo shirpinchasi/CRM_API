@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const Schema = mongoose.Schema;
+const {Schema} = mongoose;
 var moment = require('moment');
 require('dotenv').config({ path: '.env' });
 const autoIncrement = require('mongoose-auto-increment');
@@ -13,7 +13,8 @@ var Calls = new Schema({
     },
     system: {
         type: String,
-        required: true
+        required: true,
+        ref: "System"
     },
     userName: {
         type: String,
@@ -21,32 +22,37 @@ var Calls = new Schema({
     },
     assignee: {
         type: String,
-        ref:"User"
+        ref: "User"
     },
     team: {
         type: String,
         ref: "Team"
     },
-    user: {
-        type: String,
-        ref: "Users"
-    },
+    User: [{
+        type: Schema.Types.ObjectId,
+        ref: "User"
+    }],
     status: {
         type: String,
         default: () => "Open"
     },
     description: {
-        type: String
+        type: String,
+        required: true
     },
     openingDate: {
         type: String,
-        default: () => moment().format("d/MM/YYYY, hh:mm:ss a")
+        default: () => moment().format("D/MM/YYYY, hh:mm:ss a")
+    },
+    lastUpdater: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
     },
     picture: {
         data: Buffer,
         contentType: String,
         type: Object,
-        default: () => moment().format("d/MM/YYYY, hh:mm:ss a")
+        default: () => moment().format("D/MM/YYYY, hh:mm:ss a")
 
     }
 });
@@ -56,5 +62,5 @@ Calls.plugin(autoIncrement.plugin, {
     field: 'CallId',
     startAt: 1
 });
-var Call = connection.model("Call", Calls)
+var Call = connection.model("Calls", Calls)
 module.exports = Call

@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
-
-const System = new mongoose.model("System", {
+var connection = mongoose.createConnection(process.env.DB_URL);
+var System = new mongoose.Schema({
     systemName: {
         type: String
     },
@@ -8,4 +8,5 @@ const System = new mongoose.model("System", {
         type: String
     }
 });
+var System = connection.model("System",System)
 module.exports = System

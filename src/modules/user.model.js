@@ -1,16 +1,16 @@
 const mongoose = require("mongoose");
+const {Schema} = mongoose; 
 const crypto = require("crypto");
 var moment = require('moment');
 const autoIncrement = require('mongoose-auto-increment');
+const Call = require("./call.model");
 var connection = mongoose.createConnection(process.env.DB_URL);
 autoIncrement.initialize(connection);
 
 
 
-const UserSchema = mongoose.Schema({
-    role: {
-        type: String,
-    },
+const UserSchema = Schema({
+
     hash: String,
     // password : {
     //     type : String,
@@ -40,23 +40,21 @@ const UserSchema = mongoose.Schema({
         type: String,
         default: () => moment().format("d/MM/YYYY, hh:mm:ss a")
     },
-    roles: [
-        {
-            type: String,
-            ref: "Role"
-        }
-    ],
-    team: 
-        {
-            type: String,
-            ref: "Team"
-        },
-    calls: [
-        {
-            type: String,
-            ref: "Calls"
-        }
-    ]
+    roles:
+    {
+        type: String,
+        ref: "Role"
+    },
+    team:
+    {
+        type: String,
+        ref: "Team"
+    },
+    Calls:
+            [{
+                type: Schema.Types.ObjectId,
+                ref: "Calls"
+            }]
 });
 UserSchema.plugin(autoIncrement.plugin, {
     model: 'UserSchema',
@@ -76,4 +74,5 @@ UserSchema.methods.validPassword = function (password) {
     return this.hash === hash;
 };
 
-const User = module.exports = mongoose.model('User', UserSchema); 
+const User = mongoose.model('User', UserSchema);
+module.exports = User

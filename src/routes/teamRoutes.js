@@ -36,10 +36,10 @@ app.post("/addTeam",  (req, res) => {
 app.get('/getTeam/:id', authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
   Team.findById(req.params.id).then((team) => {
     if (!team) {
-      return res.status(404).send
+      return res.status(404).send({message : "not found"})
     } res.send({ team });
   }).catch(() => {
-    res.status(404).send()
+    res.status(500).send({message:"Error"})
   })
 
 })
@@ -52,6 +52,7 @@ app.put('/updateTeam/:id', authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
     let dbo = db.db("CRM")
     dbo.collection('teams').findOneAndUpdate({ _id: mongodb.ObjectId(req.params.id) }, { $set: { userName: req.body.userName, teamName: req.body.teamName } }, (err, result) => {
       if (err) {
+        res.status(500).send({message : "this is error"})
         console.log(err)
       }
     })

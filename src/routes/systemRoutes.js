@@ -7,7 +7,7 @@ const authJwt = require("../helpers/auth")
 
 
 
-app.get("/system", authJwt.verifyToken, (req, res) => {
+app.get("/system", authJwt.verifyToken,authJwt.isAdmin, (req, res) => {
   System.find((err, docs) => {
     if (!err) {
       res.send(docs);

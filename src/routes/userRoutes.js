@@ -12,6 +12,7 @@ const authJwt = require("../helpers/auth")
 const db = require("../modules/mongoose");
 const User = db.user;
 const Role = db.role;
+const Call = require("../modules/call.model")
 const DURATION_60D = 60 * 60 * 24 * 60 * 1000;
 require('dotenv').config({ path: '.env' });
 const cors = require("cors");
@@ -75,7 +76,7 @@ app.post("/user/signup", verifySignUp.checkDuplicateUserNameOrEmail, verifySignU
 
         user.save(err => {
           if (err) {
-            res.status(500).send({ message: "error" });
+            res.status(500).send({ message: "error saving user" });
             return;
           }
           return res.status(201).send({ redirectUrl: "/Login", message: "User Registered!" });
@@ -114,32 +115,40 @@ app.post("/user/login", (req, res, next) => {
       for (let i = 0; i < user.roles.length; i++) {
         authorities.push("ROLE_" + user.roles[i].name.toUpperCase());
       }
-
-      return res.status(200).send({
-        userName: user.userName,
-        user: token,
-        redirectUrl: "/"
-      })
+      if(user.status === "Not Active"){
+        res.status(401).send({message:"your account has been disabled"})
+      }else if(authorities.includes("ROLE_ADMIN")){
+        return res.status(200).send({
+          userName: user.userName,
+          user: token,
+          redirectUrl: "/adminPanel"
+        })
+      }else{
+        return res.status(200).send({
+          userName: user.userName,
+          user: token,
+          redirectUrl: "/"
+        })
+      }
     })
 })
 
 
-app.get('/getUser/:id', authJwt.verifyToken, (req, res) => {
-  User.findById(req.params.id).then((user) => {
+app.get('/getUser/:employeeId', authJwt.verifyToken, (req, res) => {
+  User.findOne({employeeId: req.params.employeeId}).then((user) => {
     if (!user) {
-      return res.status(404).send
+      return res.status(404).send({ message: "user not found " })
     } res.send({ user });
   }).catch(() => {
-    res.status(404).send({ message: "user not found " })
+    res.status(500).send({ message: "error" })
   })
 
 })
 
 
 app.get("/adminPanel", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
-  res.send({data: req.user, redirectUrl :"/adminPanel"})
-  res.end()
-
+  res.send({data: req.user})
+  res.end();
 });
 
 app.get("/user/me", authJwt.verifyToken, (req, res) => {
@@ -147,7 +156,7 @@ app.get("/user/me", authJwt.verifyToken, (req, res) => {
 })
 
 
-app.get("/getUser", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
+app.get("/getUser", (req, res) => {
   User.find((err, docs) => {
     if (!err) {
       res.send(docs)
@@ -158,7 +167,9 @@ app.get("/getUser", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
 
   })
 })
-
+app.get("/Oops",(req,res)=>{
+  res.sendStatus(401).send({statusCode : 401, message : "Sorry, you are not authorized to go in here!"})
+})
 
 
 app.get('/logOut', (req, res) => {
