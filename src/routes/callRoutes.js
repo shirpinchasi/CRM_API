@@ -40,7 +40,6 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage })
 
-
 app.get("/getCalls", authJwt.verifyToken,authJwt.isAdmin, (req, res) => {
   Call.find((err, docs) => {
     if (!err) {
