@@ -7,8 +7,6 @@ const Call = require("./call.model");
 var connection = mongoose.createConnection(process.env.DB_URL);
 autoIncrement.initialize(connection);
 
-
-
 const UserSchema = Schema({
 
     hash: String,
