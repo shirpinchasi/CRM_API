@@ -17,6 +17,7 @@ const DURATION_60D = 60 * 60 * 24 * 60 * 1000;
 require('dotenv').config({ path: '.env' });
 const cors = require("cors");
 var validator = require('validator');
+const path = require("path")
 
 
 app.use(cors({

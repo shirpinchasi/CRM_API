@@ -15,7 +15,7 @@ var nodemailer = require('nodemailer');
 const db = require("../modules/mongoose");
 const User = db.user
 const hbs = require("nodemailer-express-handlebars")
-// const path = require("path")
+const path = require("path")
 require('dotenv').config({ path: '.env' });
 
 let transport = nodemailer.createTransport({
