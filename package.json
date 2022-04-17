@@ -1,7 +1,6 @@
 {
   "name": "crm-api",
   "version": "1.0.0",
-  "description": "",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -35,5 +34,14 @@
   "devDependencies": {
     "async": "^2.6.4",
     "nodemon": "^2.0.15"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shirpinchasi/CRM_API.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shirpinchasi/CRM_API/issues"
+  },
+  "homepage": "https://github.com/shirpinchasi/CRM_API#readme",
+  "description": ""
 }
