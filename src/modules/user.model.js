@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const {Schema} = mongoose; 
+const { Schema } = mongoose;
 const crypto = require("crypto");
 var moment = require('moment');
 const autoIncrement = require('mongoose-auto-increment');
@@ -36,23 +36,23 @@ const UserSchema = Schema({
     },
     openingDate: {
         type: String,
-        default: () => moment().format("d/MM/YYYY, hh:mm:ss a")
+        default: () => moment().format("D/MM/YYYY, hh:mm:ss a")
     },
     roles:
-    {
-        type: String,
-        ref: "Role"
-    },
+            {
+                type: Array,
+                ref: "Role"
+            },
     team:
     {
         type: String,
         ref: "Team"
     },
     Calls:
-            [{
-                type: Schema.Types.ObjectId,
-                ref: "Calls"
-            }]
+        [{
+            type: Schema.Types.ObjectId,
+            ref: "Calls"
+        }]
 });
 UserSchema.plugin(autoIncrement.plugin, {
     model: 'UserSchema',

@@ -8,7 +8,7 @@ var connection = mongoose.createConnection(process.env.DB_URL);
 autoIncrement.initialize(connection);
 
 var Calls = new Schema({
-    CallId: {
+    _id: {
         type: Number,
     },
     system: {
@@ -28,10 +28,10 @@ var Calls = new Schema({
         type: String,
         ref: "Team"
     },
-    User: [{
-        type: Schema.Types.ObjectId,
+    User: {
+        type: String,
         ref: "User"
-    }],
+    },
     status: {
         type: String,
         default: () => "Open"
@@ -45,22 +45,27 @@ var Calls = new Schema({
         default: () => moment().format("D/MM/YYYY, hh:mm:ss a")
     },
     lastUpdater: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: String,
         ref: "User"
     },
     picture: {
         data: Buffer,
         contentType: String,
-        type: Object,
-        default: () => moment().format("D/MM/YYYY, hh:mm:ss a")
+        type: Array,
+        uploadDate: Date
+        // default: () => moment().format("D/MM/YYYY, hh:mm:ss a")
 
+    },
+    link:{
+        type:String
     }
 });
 
 Calls.plugin(autoIncrement.plugin, {
     model: 'Calls',
-    field: 'CallId',
+    field: '_id',
     startAt: 1
 });
+
 var Call = connection.model("Calls", Calls)
 module.exports = Call

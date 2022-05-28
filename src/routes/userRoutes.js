@@ -107,22 +107,16 @@ app.post("/user/login", (req, res, next) => {
           })
         }
       }
-
-
-      const token = jwt.sign({ id: user._id }, process.env.SECRET, { expiresIn: DURATION_60D });
+      const token = jwt.sign({ id: user._id },process.env.SECRET, { expiresIn: DURATION_60D });
       res.cookie(process.env.COOKIE_NAME, token, { maxAge: DURATION_60D, secure: true, httpOnly: true, sameSite: 'none' });
       var authorities = [];
       for (let i = 0; i < user.roles.length; i++) {
-        console.log(user.roles);
         authorities.push("ROLE_" + user.roles[i].name.toUpperCase());
       }
-      
-      console.log(authorities);
       if(user.status === "Not Active"){
         res.status(401).send({message:"your account has been disabled"})
       }else if(authorities.includes("ROLE_ADMIN")){
         return res.status(200).send({
-          message:"this is admin",
           userName: user.userName,
           user: token,
           redirectUrl: "/adminPanel"
@@ -156,27 +150,31 @@ app.get("/adminPanel", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
 });
 
 app.get("/user/me", authJwt.verifyToken, (req, res) => {
-  res.json(req.user)
+  Role.findById({_id : req.user.roles}).then((role)=>{
+    if(role.name === "admin"){
+      res.status(200).send({ valid: "admin", user: req.user })
+    }else if(role.name === "user"){
+      res.status(200).send({ valid: "user", user: req.user })
+    }
+  })
+  // res.json(req.user)
 })
 
 
-app.get("/getUser", (req, res) => {
+app.get("/getUser",authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
   User.find((err, docs) => {
     if (!err) {
       res.send(docs)
     } else {
-      res.sendStatus(409)
+      res.sendStatus(404).send({message:"sorry"})
       console.log("not getting info : " + err);
     }
 
   })
 })
-app.get("/Oops",(req,res)=>{
-  res.sendStatus(401).send({statusCode : 401, message : "Sorry, you are not authorized to go in here!"})
-})
 
 
-app.get('/logOut', (req, res) => {
+app.get('/logOut',authJwt.verifyToken, (req, res) => {
   res.clearCookie(process.env.COOKIE_NAME, { sameSite: "none", secure: true })
   res.send({ message: 'cookie cleared', redirectUrl: "/Login" });
 });

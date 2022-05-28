@@ -44,14 +44,10 @@ function isAdmin(req, res, next) {
             next();
             return;
           }
-          // else if(roles[i].name === "user"){
-          //       res.status(401).send({status : 401,message : "you are not authorized!", redirectUrl : "/Oops"})
-                
-          // }
         }
-       
+
       }
-      
+
     )
   })
 };
