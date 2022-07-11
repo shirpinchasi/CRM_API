@@ -181,7 +181,7 @@ app.post('/ForgetPasswordEmail' , (req, res) => {
         template: 'forget',
         context: {
           userName :user.userName ,
-          link: `${req.body.link}/ForgetPassword`
+          link: process.env.BASE_URL+`/ForgetPassword`
         }
         // text: 'Hello world ', // plaintext body
         // html: '<b>Hello world </b><br> This is the first email sent with Nodemailer in Node.js' // html body
