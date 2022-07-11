@@ -102,7 +102,7 @@ app.post("/addCall", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
           system: call.system,
           assignee: call.assignee,
           team : call.team,
-          link: `${call.link}/callInfo/${call._id}`
+          link: process.env.BASE_URL+`/callInfo/${call._id}`
         }
         // text: 'Hello world ', // plaintext body
         // html: '<b>Hello world </b><br> This is the first email sent with Nodemailer in Node.js' // html body
