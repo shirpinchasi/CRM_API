@@ -12,13 +12,12 @@ app.get("/getTeams", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
     if (!err) {
       res.send(docs);
     } else {
-      res.sendStatus(409)
-      console.log("not getting info : " + err);
+      res.sendStatus(404).send({ message: "Teams not found" })
     }
 
   })
 })
-app.post("/addTeam",  (req, res) => {
+app.post("/addTeam", (req, res) => {
   const newTeam = new Team(req.body);
   try {
     const createTeam = newTeam.save();
@@ -28,7 +27,7 @@ app.post("/addTeam",  (req, res) => {
       res.sendStatus(409);
       return;
     }
-    res.sendStatus(500)
+    res.sendStatus(500).send({ message: "Error in adding team" })
   }
 })
 
@@ -36,10 +35,10 @@ app.post("/addTeam",  (req, res) => {
 app.get('/getTeam/:id', authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
   Team.findById(req.params.id).then((team) => {
     if (!team) {
-      return res.status(404).send({message : "not found"})
+      return res.status(404).send({ message: "Team not found" })
     } res.send({ team });
   }).catch(() => {
-    res.status(500).send({message:"Error"})
+    res.status(500).send({ message: "Error getting Team" })
   })
 
 })
@@ -52,8 +51,8 @@ app.put('/updateTeam/:id', authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
     let dbo = db.db("CRM")
     dbo.collection('teams').findOneAndUpdate({ _id: mongodb.ObjectId(req.params.id) }, { $set: { userName: req.body.userName, teamName: req.body.teamName } }, (err, result) => {
       if (err) {
-        res.status(500).send({message : "this is error"})
-        console.log(err)
+        res.status(500).send({ message: "Error updating team" })
+
       }
     })
   })

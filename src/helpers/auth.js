@@ -37,6 +37,7 @@ function isAdmin(req, res, next) {
       (err, roles) => {
         if (err) {
           res.status(500).send({ message: err });
+          console.log(err);
           return;
         }
         for (let i = 0; i < roles.length; i++) {
@@ -44,6 +45,12 @@ function isAdmin(req, res, next) {
             next();
             return;
           }
+          // if(roles[i].name === "user"){
+          //   res.status(401).send({message:"sorry"})
+          //   next(err)
+          //   // return;
+          // }
+
         }
 
       }
@@ -51,10 +58,45 @@ function isAdmin(req, res, next) {
     )
   })
 };
+// function isUser(req, res, next) {
+//   User.findById(req.user._id).exec((err, user) => {
+//     if (err) {
+//       res.status(500).send({ message: err });
+//       return;
+//     }
+//     Role.find(
+//       {
+//         _id: { $in: user.roles }
+//       },
+//       (err, roles) => {
+//         if (err) {
+//           res.status(500).send({ message: err });
+//           console.log(err);
+//           return;
+//         }
+//         for (let i = 0; i < roles.length; i++) {
+//           if (roles[i].name === "user") {
+//             next();
+//             return;
+//           }
+//           // if(roles[i].name === "user"){
+//           //   res.status(401).send({message:"sorry"})
+//           //   next(err)
+//           //   // return;
+//           // }
+
+//         }
+
+//       }
+
+//     )
+//   })
+// };
 
 
 const authJwt = {
   verifyToken,
-  isAdmin
+  isAdmin,
+  // isUser
 };
 module.exports = authJwt;

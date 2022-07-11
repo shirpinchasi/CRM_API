@@ -1,19 +1,20 @@
 const express = require("express");
 const app = express()
-const System = require("../modules/system.model")
+const db = require("../modules/mongoose")
+const System = db.system
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json())
 const authJwt = require("../helpers/auth")
 
 
 
-app.get("/system", authJwt.verifyToken,authJwt.isAdmin, (req, res) => {
+app.get("/system", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
   System.find((err, docs) => {
     if (!err) {
       res.send(docs);
+
     } else {
-      res.sendStatus(409)
-      console.log("not getting info : " + err);
+      res.send({ status: 404, message: "Error in finding system" })
     }
 
   })
@@ -30,7 +31,7 @@ app.post("/addSystem", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
       res.sendStatus(409);
       return;
     }
-    res.sendStatus(500)
+    res.sendStatus(500).send({ message: "Error in adding system" })
   }
 })
 

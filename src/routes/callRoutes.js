@@ -1,6 +1,5 @@
 const express = require("express");
 const app = express();
-const Call = require("../modules/call.model")
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 var MongoClient = require('mongodb').MongoClient;
@@ -14,6 +13,7 @@ const Schema = mongoose.Schema;
 var nodemailer = require('nodemailer');
 const db = require("../modules/mongoose");
 const User = db.user
+const Call = db.call
 const hbs = require("nodemailer-express-handlebars")
 const path = require("path")
 require('dotenv').config({ path: '.env' });
@@ -46,8 +46,7 @@ app.get("/getCalls", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
     if (!err) {
       res.send(docs);
     } else {
-      res.sendStatus(404)
-      console.log("not getting info : " + err);
+      res.sendStatus(404).send({message:"call not found"})
     }
 
   })
@@ -63,7 +62,7 @@ app.post("/addCall", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
       res.sendStatus(409);
       return;
     }
-    res.sendStatus(500)
+    res.sendStatus(500).send({message:"Error in adding new call"})
   }
 
   const handleOptions = {
@@ -90,7 +89,6 @@ app.post("/addCall", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
       }
     })
     dbo.collection("calls").findOne({ _id: newCall._id }).then((call) => {
-      console.log(call);
       var mailOptions = {
         from: process.env.EMAIL_USERNAME,
         to: req.user.email,
@@ -102,6 +100,7 @@ app.post("/addCall", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
           description: call.description,
           system: call.system,
           assignee: call.assignee,
+          team : call.team,
           link: `${call.link}/callInfo/${call._id}`
         }
         // text: 'Hello world ', // plaintext body
@@ -109,12 +108,11 @@ app.post("/addCall", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
       }
       transport.sendMail(mailOptions, function (err, info) {
         if (err) {
-          console.log(err)
+          res.sendStatus(500).send({ message: "Error in sendong email" })
         } else {
-          console.log(info);
+          res.sendStatus(200).send({ message: "Success in sending email" })
         }
       });
-      console.log(call);
     })
   })
 })
@@ -123,10 +121,10 @@ app.post("/addCall", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
 app.get('/getCalls/:id', authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
   Call.findOne({ _id: req.params.id }).then((call) => {
     if (!call) {
-      return res.status(404).send({ message: "not found" })
+      return res.status(404).send({ message: "call not found" })
     } res.send({ call });
   }).catch(() => {
-    res.status(404).send({ message: "not found" })
+    res.status(500).send({ message: "error in finding call id" })
   })
 
 })
@@ -134,53 +132,42 @@ app.put('/uploadPicture/:id', upload.single("File"), (req, res, next) => {
   var img = fs.readFileSync(req.file.path);
   var encode_image = img.toString('base64');
   var finalImg = {
-    id: crypto.randomBytes(2).toString("hex"),
+    itemId: crypto.randomBytes(2).toString("hex"),
     contentType: req.file.mimetype,
     image: Buffer.from(encode_image, 'base64'),
     fileName: req.file.originalname,
     uploadDate: moment().format("D/MM/YYYY, hh:mm:ss a")
   };
+
   MongoClient.connect(process.env.DB_URL, (err, db) => {
     if (err) {
       throw err;
     }
     let dbo = db.db("CRM")
-    dbo.collection('calls').findOneAndUpdate({CallId: req.params.CallId}, { $addToSet: { picture: finalImg } }, (err, result) => {
+    dbo.collection('calls').findOneAndUpdate({ _id: Number(req.params.id) }, { $addToSet: { picture: finalImg } }, (err, result) => {
       if (err) {
-        res.status(500).send({ message: "this is error" })
-        console.log(err + "this is error")
+        res.status(500).send({ message: "Error in uploading file" })
       }
-      console.log(result);
-      
-      res.status(200).send({ status: "200", message: "uploded file" })
+      res.status(200).send({ status: "200", message: "uploded file successfully" })
     })
   })
 })
-// app.delete("/deleteFile/:id", (req, res) => {
-//     MongoClient.connect(process.env.DB_URL, (err, db) => {
-//       if (err) {
-//         throw err;
-//       }
-//       console.log(req.params);
-//       let dbo = db.db("CRM")
-//       dbo.collection('calls').deleteOne({ CallId: req.params.CallId }, (err, success) => {
-//         if (err) console.log(err);
-//         console.log(success);
-//       })
-//     })
-//   })
 
-app.delete("/deleteFile/:id", (req, res) => {
+app.delete("/deleteFile/:id/:itemId", (req, res) => {
   MongoClient.connect(process.env.DB_URL, (err, db) => {
     if (err) {
       throw err;
     }
-    console.log(req.body);
-    console.log(req.params);
     let dbo = db.db("CRM")
-    dbo.collection('calls').updateOne({ CallId: req.params.CallId }, { $pull: { picture: { id: req.params.id } } }, (err, success) => {
-      if (err) console.log(err);
+    dbo.collection('calls').updateOne({ _id: Number(req.params.id) }, { $pull: { picture: { itemId: req.params.itemId } } }, (err, success) => {
+      if (err) {
+        res.status(500).send({ message: "Error in deleting file" })
+
+      }
+      res.status(200).send({status:200, message: "deleted file successfully" })
+
     })
+
   })
 })
 
@@ -191,11 +178,11 @@ app.put('/updateCall/:id', authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
       throw err;
     }
     let dbo = db.db("CRM")
-    dbo.collection('calls').findOneAndUpdate({ _id : req.params._id}, { $set: { userName: req.body.userName, system: req.body.system, status : req.body.status, description : req.body.description, lastUpdater : req.body.userName } }, (err, result) => {
+    dbo.collection('calls').findOneAndUpdate({ _id: Number(req.params.id) }, { $set: { userName: req.body.userName, system: req.body.system, status: req.body.status, description: req.body.description, lastUpdater: req.body.userName } }, (err, result) => {
       if (err) {
-        res.status(500).send({ message: "this is error" })
-        console.log(err)
+        res.status(500).send({ message: "Error in updating call" })
       }
+      res.status(200).send({ message: "success in updating call" })
     })
   })
 })

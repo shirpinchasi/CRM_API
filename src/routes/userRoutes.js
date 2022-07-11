@@ -12,13 +12,16 @@ const authJwt = require("../helpers/auth")
 const db = require("../modules/mongoose");
 const User = db.user;
 const Role = db.role;
-const Call = require("../modules/call.model")
+var MongoClient = require('mongodb').MongoClient;
+
 const DURATION_60D = 60 * 60 * 24 * 60 * 1000;
 require('dotenv').config({ path: '.env' });
 const cors = require("cors");
+const hbs = require("nodemailer-express-handlebars")
+const nodemailer = require('nodemailer');
+
 var validator = require('validator');
 const path = require("path")
-
 
 app.use(cors({
   origin: true,
@@ -34,6 +37,20 @@ app.use(function (req, res, next) {
   );
   next();
 });
+
+let transport = nodemailer.createTransport({
+  host: 'smtp-mail.outlook.com',
+  secureConnection: false,
+  port: 587,
+  tls: {
+    ciphers: "SSLv3"
+  },
+  auth: {
+    user: process.env.EMAIL_USERNAME,
+    pass: process.env.EMAIL_PASSWORD
+  }
+});
+
 
 app.post("/user/signup", verifySignUp.checkDuplicateUserNameOrEmail, verifySignUp.checkRolesExisted, (req, res) => {
   const user = new User(req.body);
@@ -107,21 +124,21 @@ app.post("/user/login", (req, res, next) => {
           })
         }
       }
-      const token = jwt.sign({ id: user._id },process.env.SECRET, { expiresIn: DURATION_60D });
+      const token = jwt.sign({ id: user._id }, process.env.SECRET, { expiresIn: DURATION_60D });
       res.cookie(process.env.COOKIE_NAME, token, { maxAge: DURATION_60D, secure: true, httpOnly: true, sameSite: 'none' });
       var authorities = [];
       for (let i = 0; i < user.roles.length; i++) {
         authorities.push("ROLE_" + user.roles[i].name.toUpperCase());
       }
-      if(user.status === "Not Active"){
-        res.status(401).send({message:"your account has been disabled"})
-      }else if(authorities.includes("ROLE_ADMIN")){
+      if (user.status === "Not Active") {
+        res.status(401).send({ message: "your account has been disabled" })
+      } else if (authorities.includes("ROLE_ADMIN")) {
         return res.status(200).send({
           userName: user.userName,
           user: token,
           redirectUrl: "/adminPanel"
         })
-      }else{
+      } else {
         return res.status(200).send({
           userName: user.userName,
           user: token,
@@ -132,8 +149,69 @@ app.post("/user/login", (req, res, next) => {
 })
 
 
+app.post('/ForgetPasswordEmail' , (req, res) => {
+  console.log(req.body)
+  User.findOne({ email: req.body.email}).then((email) => {
+    console.log(email);
+    if (!email) {
+      return res.status(404).send({ message: "email not found" })
+    } res.send({ email });
+  }).catch(() => {
+    res.status(500).send({ message: "error" })
+  })
+  const handleOptions = {
+    viewEngine: {
+      layoutsDir: path.resolve("./views/"),
+      defaultLayout: false,
+      partialDir: path.resolve("./views/forget/"),
+    },
+    viewPath: path.resolve("./views/forget")
+  };
+  transport.use("compile", hbs(handleOptions))
+  MongoClient.connect(process.env.DB_URL, (err, db) => {
+    if (err) {
+      throw err
+    }
+    let dbo = db.db("CRM")
+    dbo.collection("users").findOne({ email: req.body.email }).then((user) => {
+      var mailOptions = {
+        from: process.env.EMAIL_USERNAME,
+        to: req.body.email,
+        subject: 'Forget Password Email', 
+        template: 'forget',
+        context: {
+          userName :user.userName ,
+          link: `${req.body.link}/ForgetPassword`
+        }
+        // text: 'Hello world ', // plaintext body
+        // html: '<b>Hello world </b><br> This is the first email sent with Nodemailer in Node.js' // html body
+      }
+      transport.sendMail(mailOptions, function (err, info) {
+        if (err) {
+          res.sendStatus(500).send({ message: "Error in sendong email" })
+        } else {
+          console.log(info);
+          res.sendStatus(200).send({ message: "Success in sending email" })
+        }
+      });
+    })
+  })
+
+})
+// app.post('/ForgetPassword' , (req, res) => {
+//   User.findOne({ email: req.params.email }).then((user) => {
+//     if (!email) {
+//       return res.status(404).send({ message: "email not found" })
+//     } res.send({ user });
+//   }).catch(() => {
+//     res.status(500).send({ message: "error" })
+//   })
+
+// })
+
+
 app.get('/getUser/:employeeId', authJwt.verifyToken, (req, res) => {
-  User.findOne({employeeId: req.params.employeeId}).then((user) => {
+  User.findOne({ employeeId: req.params.employeeId }).then((user) => {
     if (!user) {
       return res.status(404).send({ message: "user not found " })
     } res.send({ user });
@@ -142,18 +220,26 @@ app.get('/getUser/:employeeId', authJwt.verifyToken, (req, res) => {
   })
 
 })
-
+// app.get('/getUser/:userName',authJwt.verifyToken,(req,res)=>{
+//   User.findOne({userName : req.params.userName}).then((user)=>{
+//     if(!user){
+//       return res.status(404).send({ message: "user not found " })
+//     }res.send({ user })
+//   }).catch(() => {
+//     res.status(500).send({ message: "error" })
+//   })
+// })
 
 app.get("/adminPanel", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
-  res.send({data: req.user})
+  res.send({ data: req.user })
   res.end();
 });
 
 app.get("/user/me", authJwt.verifyToken, (req, res) => {
-  Role.findById({_id : req.user.roles}).then((role)=>{
-    if(role.name === "admin"){
+  Role.findById({ _id: req.user.roles }).then((role) => {
+    if (role.name === "admin") {
       res.status(200).send({ valid: "admin", user: req.user })
-    }else if(role.name === "user"){
+    } else if (role.name === "user") {
       res.status(200).send({ valid: "user", user: req.user })
     }
   })
@@ -161,12 +247,14 @@ app.get("/user/me", authJwt.verifyToken, (req, res) => {
 })
 
 
-app.get("/getUser",authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
+app.get("/getUser", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
   User.find((err, docs) => {
+
     if (!err) {
       res.send(docs)
+
     } else {
-      res.sendStatus(404).send({message:"sorry"})
+      res.sendStatus(404)
       console.log("not getting info : " + err);
     }
 
@@ -174,7 +262,7 @@ app.get("/getUser",authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
 })
 
 
-app.get('/logOut',authJwt.verifyToken, (req, res) => {
+app.get('/logOut', authJwt.verifyToken, (req, res) => {
   res.clearCookie(process.env.COOKIE_NAME, { sameSite: "none", secure: true })
   res.send({ message: 'cookie cleared', redirectUrl: "/Login" });
 });
