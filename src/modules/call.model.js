@@ -41,7 +41,7 @@ var Calls = Schema({
     },
     openingDate: {
         type: String,
-        default: () => moment().format("D/MM/YYYY, hh:mm:ss a").toLocaleString("il, ISR")
+        default: () => moment().format("D/MM/YYYY, hh:mm:ss a").toLocaleString("he-IL")
     },
     lastUpdater: {
         type: String,
