@@ -2,10 +2,10 @@ const mongoose = require("mongoose");
 const { Schema } = mongoose;
 const crypto = require("crypto");
 var moment = require('moment');
-const autoIncrement = require('mongoose-auto-increment');
+const AutoIncrementFactory = require('mongoose-sequence');
 const Call = require("./call.model");
 var connection = mongoose.createConnection(process.env.DB_URL);
-autoIncrement.initialize(connection);
+const AutoIncrement = AutoIncrementFactory(connection);
 
 const UserSchema = Schema({
 
@@ -14,9 +14,6 @@ const UserSchema = Schema({
     //     type : String,
     //     required : true,
     // },
-    employeeId: {
-        type: Number
-    },
     userName: {
         type: String,
         required: true,
@@ -54,11 +51,13 @@ const UserSchema = Schema({
             ref: "Calls"
         }]
 });
-UserSchema.plugin(autoIncrement.plugin, {
-    model: 'UserSchema',
-    field: 'employeeId',
-    startAt: 1
-});
+UserSchema.plugin(AutoIncrement, {inc_field: 'employeeId'});
+
+// UserSchema.plugin(autoIncrement.plugin, {
+//     model: 'UserSchema',
+//     field: 'employeeId',
+//     startAt: 1
+// });
 
 
 UserSchema.methods.setPassword = function (password) {

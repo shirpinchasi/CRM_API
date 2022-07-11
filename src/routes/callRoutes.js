@@ -57,6 +57,7 @@ app.post("/addCall", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
   try {
     const createCall = newCall.save();
     res.status(201).json(createCall);
+    console.log(createCall);
   } catch (err) {
     if (err.code === 11000) {
       res.sendStatus(409);

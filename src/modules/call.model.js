@@ -2,12 +2,11 @@ const mongoose = require("mongoose");
 const {Schema} = mongoose;
 var moment = require('moment');
 require('dotenv').config({ path: '.env' });
-const autoIncrement = require('mongoose-auto-increment');
+const AutoIncrementFactory = require('mongoose-sequence');
 var connection = mongoose.createConnection(process.env.DB_URL);
+const AutoIncrement = AutoIncrementFactory(connection);
 
-autoIncrement.initialize(connection);
-
-var Calls = new Schema({
+var Calls = Schema({
     _id: {
         type: Number,
     },
@@ -60,12 +59,14 @@ var Calls = new Schema({
         type:String
     }
 });
+Calls.plugin(AutoIncrement, {inc_field: '_id'});
 
-Calls.plugin(autoIncrement.plugin, {
-    model: 'Calls',
-    field: '_id',
-    startAt: 1
-});
+
+// Calls.plugin(autoIncrement.plugin, {
+//     model: 'Calls',
+//     field: '_id',
+//     startAt: 1
+// });
 
 var Call = connection.model("Calls", Calls)
 module.exports = Call
