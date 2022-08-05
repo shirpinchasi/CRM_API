@@ -45,11 +45,11 @@ const UserSchema = Schema({
         type: String,
         ref: "Team"
     },
-    Calls:
-        [{
-            type: Schema.Types.ObjectId,
-            ref: "Calls"
-        }]
+    calls:
+        {
+            type: Array,
+            ref: "Call"
+        }
 });
 UserSchema.plugin(AutoIncrement, {inc_field: 'employeeId'});
 

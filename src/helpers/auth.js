@@ -37,7 +37,6 @@ function isAdmin(req, res, next) {
       (err, roles) => {
         if (err) {
           res.status(500).send({ message: err });
-          console.log(err);
           return;
         }
         for (let i = 0; i < roles.length; i++) {

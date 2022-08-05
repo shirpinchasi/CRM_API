@@ -57,7 +57,6 @@ app.post("/addCall", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
   try {
     const createCall = newCall.save();
     res.status(201).json(createCall);
-    console.log(createCall);
   } catch (err) {
     if (err.code === 11000) {
       res.sendStatus(409);
@@ -82,12 +81,11 @@ app.post("/addCall", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
       throw err
     }
     let dbo = db.db("CRM")
-    dbo.collection("users").findOneAndUpdate({
-      userName: req.user.userName
-    }, {
-      $push: {
-        "calls": { $each: [newCall._id] }
-      }
+    dbo.collection("users").findOneAndUpdate({userName: req.user.userName
+    },{ 
+        $addToSet: {calls :{id: newCall._id}}
+      },(result)=>{
+      console.log(result);
     })
     dbo.collection("calls").findOne({ _id: newCall._id }).then((call) => {
       var mailOptions = {
@@ -118,6 +116,24 @@ app.post("/addCall", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
   })
 })
 
+app.put('/assignAssignee/:id/:assigneeId',authJwt.verifyToken, authJwt.isAdmin,(req,res)=>{
+  User.findOne({employeeId : req.params.assigneeId}).then((user)=>{
+    MongoClient.connect(process.env.DB_URL, (err, db) => {
+      if (err) {
+        throw err;
+      }
+      let dbo = db.db("CRM")
+      dbo.collection('calls').findOneAndUpdate({ _id:Number(req.params.id)}, { $set: { assignee:user.userName} }, (err, result) => {
+        if (err) {
+          res.status(500).send({ message: "Error in setting assignee" })
+        }
+        console.log(result);
+        res.status(200).send({ message: "success in setting assignee" })
+      })
+    })
+  })
+})
+
 
 app.get('/getCalls/:id', authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
   Call.findOne({ _id: req.params.id }).then((call) => {
@@ -129,7 +145,7 @@ app.get('/getCalls/:id', authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
   })
 
 })
-app.put('/uploadPicture/:id', upload.single("File"), (req, res, next) => {
+app.put('/uploadFile/:id', upload.single("File"), (req, res, next) => {
   var img = fs.readFileSync(req.file.path);
   var encode_image = img.toString('base64');
   var finalImg = {

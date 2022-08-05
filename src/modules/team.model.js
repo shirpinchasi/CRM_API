@@ -12,14 +12,12 @@ const Teams = new Schema({
     teamName: {
         type: String
     },
-    teamMembers: [
+    teamMembers:
         {
-            userName : String,
-            type: String,
+            type: Array,
             ref: "User"
-        }
-    ],
-    openingDate: {
+        },
+        openingDate: {
         type: String,
         default: () => moment().format("d/MM/YYYY, hh:mm:ss a")
     }

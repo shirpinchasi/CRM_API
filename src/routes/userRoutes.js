@@ -12,16 +12,19 @@ const authJwt = require("../helpers/auth")
 const db = require("../modules/mongoose");
 const User = db.user;
 const Role = db.role;
+const Call = db.call;
+const Token = db.token;
 var MongoClient = require('mongodb').MongoClient;
-
+const crypto = require("crypto")
 const DURATION_60D = 60 * 60 * 24 * 60 * 1000;
 require('dotenv').config({ path: '.env' });
 const cors = require("cors");
 const hbs = require("nodemailer-express-handlebars")
 const nodemailer = require('nodemailer');
-
+const bcrypt = require("bcrypt")
 var validator = require('validator');
-const path = require("path")
+const path = require("path");
+
 
 app.use(cors({
   origin: true,
@@ -55,7 +58,6 @@ let transport = nodemailer.createTransport({
 app.post("/user/signup", verifySignUp.checkDuplicateUserNameOrEmail, verifySignUp.checkRolesExisted, (req, res) => {
   const user = new User(req.body);
   user.email = req.body.email
-  user.password = req.body.password
   user.setPassword(req.body.password);
 
   user.save((err, user) => {
@@ -149,13 +151,11 @@ app.post("/user/login", (req, res, next) => {
 })
 
 
-app.post('/ForgetPasswordEmail' , (req, res) => {
-  console.log(req.body)
-  User.findOne({ email: req.body.email}).then((email) => {
-    console.log(email);
-    if (!email) {
-      return res.status(404).send({ message: "email not found" })
-    } res.send({ email });
+app.post('/ForgetPasswordEmail', (req, res) => {
+  User.findOne({ userName: req.body.userName }).then((user) => {
+    if (!user) {
+      return res.status(404).send({ message: "User not found" })
+    } res.send({ user });
   }).catch(() => {
     res.status(500).send({ message: "error" })
   })
@@ -172,42 +172,124 @@ app.post('/ForgetPasswordEmail' , (req, res) => {
     if (err) {
       throw err
     }
+    let resetToken = crypto.randomBytes(32).toString("hex");
+    const hash = crypto.pbkdf2Sync(resetToken, process.env.SECRET,
+      10, 64, `sha512`).toString(`hex`)
     let dbo = db.db("CRM")
     dbo.collection("users").findOne({ email: req.body.email }).then((user) => {
+      const newToken = new Token({
+        userId: user.employeeId,
+        token: hash,
+        createdAt: Date.now()
+      })
+      newToken.save();
+
       var mailOptions = {
         from: process.env.EMAIL_USERNAME,
         to: req.body.email,
-        subject: 'Forget Password Email', 
+        subject: 'Forget Password Email',
         template: 'forget',
         context: {
-          userName :user.userName ,
-          link: process.env.BASE_URL+`/ForgetPassword`
+          userName: user.userName,
+          link: process.env.BASE_URL + `/ForgetPassword/${user.employeeId}/${hash}`
         }
         // text: 'Hello world ', // plaintext body
         // html: '<b>Hello world </b><br> This is the first email sent with Nodemailer in Node.js' // html body
       }
       transport.sendMail(mailOptions, function (err, info) {
         if (err) {
-          res.sendStatus(500).send({ message: "Error in sendong email" })
+          res.sendStatus(500).send({ message: "Error in sending email" })
         } else {
-          console.log(info);
-          res.sendStatus(200).send({ message: "Success in sending email" })
+          res.sendStatus(200).send({ message: "Email send successfully! please check your inbox!" })
         }
       });
     })
   })
 
 })
-// app.post('/ForgetPassword' , (req, res) => {
-//   User.findOne({ email: req.params.email }).then((user) => {
-//     if (!email) {
-//       return res.status(404).send({ message: "email not found" })
-//     } res.send({ user });
-//   }).catch(() => {
-//     res.status(500).send({ message: "error" })
-//   })
+app.get('/ForgetPassword/:userId/:token', (req, res) => {
+  Token.findOne({ token: req.params.token }).then((token) => {
+    if (!token) {
+      return res.status(404).send({ err: "Sorry, Page Not Found" })
+    }
+    return res.status(200).send({ message: "ok" })
+  })
+})
 
-// })
+
+app.post('/ForgetPassword/:userId/:token', async (req, res) => {
+
+  const tokenFromDb = await Token.findOne({
+    userId: req.params.userId,
+    token: req.params.token
+  })
+  if (!tokenFromDb) return res.status(400).send({ message: "invald token or expired" })
+
+  const handleOptions = {
+    viewEngine: {
+      layoutsDir: path.resolve("./views/"),
+      defaultLayout: false,
+      partialDir: path.resolve("./views/"),
+    },
+    viewPath: path.resolve("./views/")
+  };
+  transport.use("compile", hbs(handleOptions))
+
+
+  User.findOne({ employeeId: req.params.userId }).then((user) => {
+    console.log(user);
+    const newPassword = crypto.pbkdf2Sync(req.body.password, process.env.SECRET,
+      100000, 64, `sha512`).toString(`hex`);
+    const validateNewPassword = crypto.pbkdf2Sync(req.body.passwordConfirmation,
+      process.env.SECRET, 100000, 64, `sha512`).toString(`hex`);
+    console.log(newPassword, validateNewPassword);
+    if (newPassword !== validateNewPassword) {
+      return res.status(400).send({ message: "passwords does not match" })
+    } else {
+      MongoClient.connect(process.env.DB_URL, (err, db) => {
+        if (err) {
+          throw err;
+        }
+        let dbo = db.db("CRM")
+        dbo.collection('users').findOneAndUpdate({ employeeId: user.employeeId }, { $set: { hash: newPassword } }, (err, result) => {
+          if (err) {
+            res.status(500).send({ message: "Error in changing password" })
+          }
+          // Token.deleteOne({ token: req.params.token }).then((token) => {
+          //   if (!token) {
+          //     return res.status(404).send({ err: "token not found" })
+          //   } else {
+          //     return res.status(200).send({ message: "token deleted successfully" })
+          //   }
+          // })
+        })
+      })
+      var mailOptions = {
+        from: process.env.EMAIL_USERNAME,
+        to: user.email,
+        subject: 'Password Reset Successfully',
+        template: 'ResetSuccess',
+        context: {
+          userName: user.userName,
+          // link: process.env.BASE_URL+`/ForgetPassword/${user.employeeId}/${hash}`
+        }
+        // text: 'Hello world ', // plaintext body
+        // html: '<b>Hello world </b><br> This is the first email sent with Nodemailer in Node.js' // html body
+      }
+      transport.sendMail(mailOptions, function (err, info) {
+        if (err) {
+          res.sendStatus(500).send({ message: "Error in sending email" })
+        } else {
+          console.log(info);
+          res.sendStatus(200).send({ message: "Email send successfully! please check your inbox!" })
+        }
+      });
+      // return res.status(201).send({message : "change password successfully"})
+    }
+
+  })
+
+})
 
 
 app.get('/getUser/:employeeId', authJwt.verifyToken, (req, res) => {
@@ -262,10 +344,36 @@ app.get("/getUser", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
 })
 
 
+
 app.get('/logOut', authJwt.verifyToken, (req, res) => {
   res.clearCookie(process.env.COOKIE_NAME, { sameSite: "none", secure: true })
   res.send({ message: 'cookie cleared', redirectUrl: "/Login" });
 });
+
+app.get("/getCallsPerUser/:id", (req, res) => {
+  User.findOne({ employeeId: req.params.id }).then((user) => {
+    if (!user) {
+      return res.status(404).send({ message: "user not found " })
+    }
+    var arr = []
+    for (let i = 0; i < user.calls.length; i++) {
+      // const element = user.calls[i].id;
+      var obj = {}
+      obj = user.calls[i].id;
+      arr.push(obj)
+      console.log(arr);
+    } Call.find({ _id: arr }).then((call) => {
+      console.log(call);
+      if (call) {
+        return res.send(call)
+      }
+
+    })
+  }).catch((err) => {
+    res.status(500).send({ message: "error" + err })
+  })
+
+})
 
 
 module.exports = app;
