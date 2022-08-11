@@ -11,7 +11,6 @@ app.get("/getTeams", (req, res) => {
   Team.find((err, docs) => {
     if (!err) {
       res.send(docs);
-      // console.log(docs);
     } else {
       res.sendStatus(404).send({ message: "Teams not found" })
     }
@@ -19,25 +18,6 @@ app.get("/getTeams", (req, res) => {
   })
 })
 
-// app.get("/teamMembers/",(req,res)=>{
-//   Team.find((err,docs) => {
-//     console.log();
-//     if(!err){
-      
-//       // Call.find({_id: arr}).then((call)=>{
-//       //   console.log(call);
-//       //   if(call){
-//       //     return res.send(call)
-//       //   }
-       
-//       // })
-
-//   }
-//   })
-// })
-  
-
-  
 app.post("/addTeam", (req, res) => {
   const newTeam = new Team(req.body);
   try {

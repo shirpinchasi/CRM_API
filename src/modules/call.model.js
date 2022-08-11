@@ -62,11 +62,5 @@ var Calls = Schema({
 Calls.plugin(AutoIncrement, {inc_field: '_id'});
 
 
-// Calls.plugin(autoIncrement.plugin, {
-//     model: 'Calls',
-//     field: '_id',
-//     startAt: 1
-// });
-
 var Call = connection.model("Calls", Calls)
 module.exports = Call

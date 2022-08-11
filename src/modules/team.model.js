@@ -10,7 +10,7 @@ const AutoIncrement = AutoIncrementFactory(connection);
 const Teams = new Schema({
    
     teamName: {
-        type: String
+        type: Object
     },
     teamMembers:
         {
@@ -25,10 +25,5 @@ const Teams = new Schema({
 
 Teams.plugin(AutoIncrement, {inc_field: 'id'});
 
-// Teams.plugin(autoIncrement.plugin, {
-//     model: 'Teams',
-//     field: '_id',
-//     startAt: 1
-// });
 var Team = connection.model("Team", Teams)
 module.exports = Team

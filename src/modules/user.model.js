@@ -10,10 +10,6 @@ const AutoIncrement = AutoIncrementFactory(connection);
 const UserSchema = Schema({
 
     hash: String,
-    // password : {
-    //     type : String,
-    //     required : true,
-    // },
     userName: {
         type: String,
         required: true,
@@ -42,7 +38,7 @@ const UserSchema = Schema({
             },
     team:
     {
-        type: String,
+        type: Object,
         ref: "Team"
     },
     calls:
@@ -52,12 +48,6 @@ const UserSchema = Schema({
         }
 });
 UserSchema.plugin(AutoIncrement, {inc_field: 'employeeId'});
-
-// UserSchema.plugin(autoIncrement.plugin, {
-//     model: 'UserSchema',
-//     field: 'employeeId',
-//     startAt: 1
-// });
 
 
 UserSchema.methods.setPassword = function (password) {

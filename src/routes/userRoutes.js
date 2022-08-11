@@ -193,8 +193,6 @@ app.post('/ForgetPasswordEmail', (req, res) => {
           userName: user.userName,
           link: process.env.BASE_URL + `/ForgetPassword/${user.employeeId}/${hash}`
         }
-        // text: 'Hello world ', // plaintext body
-        // html: '<b>Hello world </b><br> This is the first email sent with Nodemailer in Node.js' // html body
       }
       transport.sendMail(mailOptions, function (err, info) {
         if (err) {
@@ -237,12 +235,10 @@ app.post('/ForgetPassword/:userId/:token', async (req, res) => {
 
 
   User.findOne({ employeeId: req.params.userId }).then((user) => {
-    console.log(user);
     const newPassword = crypto.pbkdf2Sync(req.body.password, process.env.SECRET,
       100000, 64, `sha512`).toString(`hex`);
     const validateNewPassword = crypto.pbkdf2Sync(req.body.passwordConfirmation,
       process.env.SECRET, 100000, 64, `sha512`).toString(`hex`);
-    console.log(newPassword, validateNewPassword);
     if (newPassword !== validateNewPassword) {
       return res.status(400).send({ message: "passwords does not match" })
     } else {
@@ -255,13 +251,6 @@ app.post('/ForgetPassword/:userId/:token', async (req, res) => {
           if (err) {
             res.status(500).send({ message: "Error in changing password" })
           }
-          // Token.deleteOne({ token: req.params.token }).then((token) => {
-          //   if (!token) {
-          //     return res.status(404).send({ err: "token not found" })
-          //   } else {
-          //     return res.status(200).send({ message: "token deleted successfully" })
-          //   }
-          // })
         })
       })
       var mailOptions = {
@@ -271,20 +260,16 @@ app.post('/ForgetPassword/:userId/:token', async (req, res) => {
         template: 'ResetSuccess',
         context: {
           userName: user.userName,
-          // link: process.env.BASE_URL+`/ForgetPassword/${user.employeeId}/${hash}`
         }
-        // text: 'Hello world ', // plaintext body
-        // html: '<b>Hello world </b><br> This is the first email sent with Nodemailer in Node.js' // html body
       }
       transport.sendMail(mailOptions, function (err, info) {
         if (err) {
           res.sendStatus(500).send({ message: "Error in sending email" })
         } else {
-          console.log(info);
+          
           res.sendStatus(200).send({ message: "Email send successfully! please check your inbox!" })
         }
       });
-      // return res.status(201).send({message : "change password successfully"})
     }
 
   })
@@ -302,16 +287,6 @@ app.get('/getUser/:employeeId', authJwt.verifyToken, (req, res) => {
   })
 
 })
-// app.get('/getUser/:userName',authJwt.verifyToken,(req,res)=>{
-//   User.findOne({userName : req.params.userName}).then((user)=>{
-//     if(!user){
-//       return res.status(404).send({ message: "user not found " })
-//     }res.send({ user })
-//   }).catch(() => {
-//     res.status(500).send({ message: "error" })
-//   })
-// })
-
 app.get("/adminPanel", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
   res.send({ data: req.user })
   res.end();
@@ -325,7 +300,6 @@ app.get("/user/me", authJwt.verifyToken, (req, res) => {
       res.status(200).send({ valid: "user", user: req.user })
     }
   })
-  // res.json(req.user)
 })
 
 
@@ -361,9 +335,7 @@ app.get("/getCallsPerUser/:id", (req, res) => {
       var obj = {}
       obj = user.calls[i].id;
       arr.push(obj)
-      console.log(arr);
     } Call.find({ _id: arr }).then((call) => {
-      console.log(call);
       if (call) {
         return res.send(call)
       }

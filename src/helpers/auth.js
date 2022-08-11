@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 const db = require("../modules/mongoose");
 const User = db.user;
 const Role = db.role;
+const Team = db.team
 const express = require("express");
 const app = express();
 
@@ -44,11 +45,6 @@ function isAdmin(req, res, next) {
             next();
             return;
           }
-          // if(roles[i].name === "user"){
-          //   res.status(401).send({message:"sorry"})
-          //   next(err)
-          //   // return;
-          // }
 
         }
 
@@ -57,45 +53,45 @@ function isAdmin(req, res, next) {
     )
   })
 };
-// function isUser(req, res, next) {
+
+// function isITTeam(req, res, next) {
 //   User.findById(req.user._id).exec((err, user) => {
 //     if (err) {
 //       res.status(500).send({ message: err });
 //       return;
 //     }
-//     Role.find(
-//       {
-//         _id: { $in: user.roles }
-//       },
-//       (err, roles) => {
+//     for (let i = 0; i < user.team.length; i++) {
+//       const teamNames = user.team[i];
+//     Team.find({teamName:teamNames.teamName},
+//       (err, team) => {
 //         if (err) {
 //           res.status(500).send({ message: err });
-//           console.log(err);
 //           return;
 //         }
-//         for (let i = 0; i < roles.length; i++) {
-//           if (roles[i].name === "user") {
-//             next();
-//             return;
+//         for (let i = 0; i < team.length; i++) {
+//           for (let j = 0; j < team.teamMembers.length; j++) {
+//             const element = team.teamMembers[j];
+//             console.log(element);
+            
 //           }
-//           // if(roles[i].name === "user"){
-//           //   res.status(401).send({message:"sorry"})
-//           //   next(err)
-//           //   // return;
-//           // }
+//           if (team[i].teamMembers.includes(user.employeeId)) {
+//                 // console.log(user.employeeId);
+//             // next();
+//             // return;
+//           }
 
 //         }
 
 //       }
 
 //     )
+//   }
 //   })
 // };
-
 
 const authJwt = {
   verifyToken,
   isAdmin,
-  // isUser
+  // isITTeam
 };
 module.exports = authJwt;

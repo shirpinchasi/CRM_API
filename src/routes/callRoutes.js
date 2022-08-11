@@ -85,7 +85,6 @@ app.post("/addCall", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
     },{ 
         $addToSet: {calls :{id: newCall._id}}
       },(result)=>{
-      console.log(result);
     })
     dbo.collection("calls").findOne({ _id: newCall._id }).then((call) => {
       var mailOptions = {
@@ -102,8 +101,6 @@ app.post("/addCall", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
           team : call.team,
           link: process.env.BASE_URL+`/callInfo/${call._id}`
         }
-        // text: 'Hello world ', // plaintext body
-        // html: '<b>Hello world </b><br> This is the first email sent with Nodemailer in Node.js' // html body
       }
       transport.sendMail(mailOptions, function (err, info) {
         if (err) {
@@ -127,7 +124,6 @@ app.put('/assignAssignee/:id/:assigneeId',authJwt.verifyToken, authJwt.isAdmin,(
         if (err) {
           res.status(500).send({ message: "Error in setting assignee" })
         }
-        console.log(result);
         res.status(200).send({ message: "success in setting assignee" })
       })
     })
