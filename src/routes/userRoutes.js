@@ -264,10 +264,9 @@ app.post('/ForgetPassword/:userId/:token', async (req, res) => {
       }
       transport.sendMail(mailOptions, function (err, info) {
         if (err) {
-          res.sendStatus(500).send({ message: "Error in sending email" })
+          res.status(500).send({ message: "Error in sending email" })
         } else {
-          
-          res.sendStatus(200).send({ message: "Email send successfully! please check your inbox!" })
+          res.status(200).send({ message: "Password Reset Successfully" })
         }
       });
     }
