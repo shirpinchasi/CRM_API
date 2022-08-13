@@ -152,7 +152,7 @@ app.post("/user/login", (req, res, next) => {
 
 
 app.post('/ForgetPasswordEmail', (req, res) => {
-  User.findOne({ userName: req.body.userName }).then((user) => {
+  User.findOne({ email: req.body.email }).then((user) => {
     if (!user) {
       return res.status(404).send({ message: "User not found" })
     } res.send({ user });
@@ -324,7 +324,7 @@ app.get('/logOut', authJwt.verifyToken, (req, res) => {
   res.send({ message: 'cookie cleared', redirectUrl: "/Login" });
 });
 
-app.get("/getCallsPerUser/:id", (req, res) => {
+app.get("/getCallsPerUser/:id",authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
   User.findOne({ employeeId: req.params.id }).then((user) => {
     if (!user) {
       return res.status(404).send({ message: "user not found " })
