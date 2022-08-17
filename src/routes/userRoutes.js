@@ -138,7 +138,7 @@ app.post("/user/login", (req, res, next) => {
         return res.status(200).send({
           userName: user.userName,
           user: token,
-          redirectUrl: "/adminPanel"
+          redirectUrl: `/adminPanel/${user.employeeId}`
         })
       } else {
         return res.status(200).send({
@@ -154,7 +154,7 @@ app.post("/user/login", (req, res, next) => {
 app.post('/ForgetPasswordEmail', (req, res) => {
   User.findOne({ email: req.body.email }).then((user) => {
     if (!user) {
-      return res.status(404).send({ message: "User not found" })
+      return res.status(404).send({ err: "User not found" })
     } res.send({ user });
   }).catch(() => {
     res.status(500).send({ message: "error" })
@@ -196,7 +196,7 @@ app.post('/ForgetPasswordEmail', (req, res) => {
       }
       transport.sendMail(mailOptions, function (err, info) {
         if (err) {
-          res.sendStatus(500).send({ message: "Error in sending email" })
+          res.sendStatus(500).send({ err: "Error in sending email" })
         } else {
           res.sendStatus(200).send({ message: "Email send successfully! please check your inbox!" })
         }
@@ -221,7 +221,7 @@ app.post('/ForgetPassword/:userId/:token', async (req, res) => {
     userId: req.params.userId,
     token: req.params.token
   })
-  if (!tokenFromDb) return res.status(400).send({ message: "invald token or expired" })
+  if (!tokenFromDb) return res.status(400).send({ error: "invald token or expired" })
 
   const handleOptions = {
     viewEngine: {
@@ -239,8 +239,11 @@ app.post('/ForgetPassword/:userId/:token', async (req, res) => {
       100000, 64, `sha512`).toString(`hex`);
     const validateNewPassword = crypto.pbkdf2Sync(req.body.passwordConfirmation,
       process.env.SECRET, 100000, 64, `sha512`).toString(`hex`);
+      if(newPassword.includes(user.hash)){
+        return res.status(400).send({ error: "the new password cannot be similar to old password!" })
+      }
     if (newPassword !== validateNewPassword) {
-      return res.status(400).send({ message: "passwords does not match" })
+      return res.status(400).send({ error: "passwords does not match" })
     } else {
       MongoClient.connect(process.env.DB_URL, (err, db) => {
         if (err) {
@@ -264,7 +267,7 @@ app.post('/ForgetPassword/:userId/:token', async (req, res) => {
       }
       transport.sendMail(mailOptions, function (err, info) {
         if (err) {
-          res.status(500).send({ message: "Error in sending email" })
+          res.status(500).send({ error: "Error in sending email" })
         } else {
           res.status(200).send({ message: "Password Reset Successfully" })
         }
@@ -294,12 +297,38 @@ app.get("/adminPanel", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
 app.get("/user/me", authJwt.verifyToken, (req, res) => {
   Role.findById({ _id: req.user.roles }).then((role) => {
     if (role.name === "admin") {
-      res.status(200).send({ valid: "admin", user: req.user })
+      return res.status(200).send({ valid: "admin", user: req.user })
     } else if (role.name === "user") {
-      res.status(200).send({ valid: "user", user: req.user })
+      return res.status(200).send({ valid: "user", user: req.user })
     }
   })
 })
+app.get("/getUserInfo/:id",(req, res) => {
+  User.findOne({ employeeId:req.params.id}).then((user) => {
+    if (!user) {
+      return res.status(404).send({ message: "user not found " })
+    } 
+    Call.find({assignee: user.userName}).then((call)=>{
+      res.status(200).send({ calls:call })
+    })
+  }).catch(() => {
+    res.status(500).send({ message: "error" })
+  })
+  
+  // User.find((err, docs) => {
+
+  //   if (!err) {
+  //     res.send(docs)
+
+  //   } else {
+  //     res.sendStatus(404)
+  //     console.log("not getting info : " + err);
+  //   }
+
+  // })
+})
+
+
 
 
 app.get("/getUser", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
@@ -323,23 +352,20 @@ app.get('/logOut', authJwt.verifyToken, (req, res) => {
   res.send({ message: 'cookie cleared', redirectUrl: "/Login" });
 });
 
-app.get("/getCallsPerUser/:id",authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
+app.get("/getCallsPerTeam/:id", (req, res) => {
   User.findOne({ employeeId: req.params.id }).then((user) => {
     if (!user) {
       return res.status(404).send({ message: "user not found " })
     }
-    var arr = []
-    for (let i = 0; i < user.calls.length; i++) {
-      // const element = user.calls[i].id;
-      var obj = {}
-      obj = user.calls[i].id;
-      arr.push(obj)
-    } Call.find({ _id: arr }).then((call) => {
-      if (call) {
-        return res.send(call)
-      }
-
-    })
+    let teams = []
+    for (let i = 0; i < user.team.length; i++) {
+     const element = user.team[i].teamName;
+     teams.push(element)
+    }
+    console.log(teams);
+   Call.find({team: teams}).then((team)=>{
+    return res.status(200).send({ teams:team })
+   })
   }).catch((err) => {
     res.status(500).send({ message: "error" + err })
   })

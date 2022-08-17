@@ -9,6 +9,7 @@ const cors = require("cors");
 const db = require("./src/modules/mongoose");
 const Role = db.role;
 app.use(cookieParser());
+
 // const { auth } = require('express-openid-connect');
 
 // const config = {
