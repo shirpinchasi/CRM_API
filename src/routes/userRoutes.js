@@ -362,9 +362,8 @@ app.get("/getCallsPerTeam/:id", (req, res) => {
      const element = user.team[i].teamName;
      teams.push(element)
     }
-    console.log(teams);
    Call.find({team: teams}).then((team)=>{
-    return res.status(200).send({ teams:team })
+    return res.status(200).send({ teams:team,teamName: teams})
    })
   }).catch((err) => {
     res.status(500).send({ message: "error" + err })
