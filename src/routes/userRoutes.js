@@ -154,7 +154,7 @@ app.post("/user/login", (req, res, next) => {
 app.post('/ForgetPasswordEmail', (req, res) => {
   User.findOne({ email: req.body.email }).then((user) => {
     if (!user) {
-      return res.status(404).send({ err: "User not found" })
+      return res.status(404).send({ err: "Email not found" })
     } res.send({ user });
   }).catch(() => {
     res.status(500).send({ message: "error" })
@@ -303,7 +303,7 @@ app.get("/user/me", authJwt.verifyToken, (req, res) => {
     }
   })
 })
-app.get("/getUserInfo/:id",(req, res) => {
+app.get("/getUserInfo/:id",authJwt.verifyToken, authJwt.isAdmin,(req, res) => {
   User.findOne({ employeeId:req.params.id}).then((user) => {
     if (!user) {
       return res.status(404).send({ message: "user not found " })
@@ -314,18 +314,7 @@ app.get("/getUserInfo/:id",(req, res) => {
   }).catch(() => {
     res.status(500).send({ message: "error" })
   })
-  
-  // User.find((err, docs) => {
 
-  //   if (!err) {
-  //     res.send(docs)
-
-  //   } else {
-  //     res.sendStatus(404)
-  //     console.log("not getting info : " + err);
-  //   }
-
-  // })
 })
 
 
@@ -352,7 +341,29 @@ app.get('/logOut', authJwt.verifyToken, (req, res) => {
   res.send({ message: 'cookie cleared', redirectUrl: "/Login" });
 });
 
-app.get("/getCallsPerTeam/:id", (req, res) => {
+
+app.get("/getCallsPerUser/:id",authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
+  User.findOne({ employeeId: req.params.id }).then((user) => {
+    if (!user) {
+      return res.status(404).send({ message: "user not found " })
+    }
+    var arr = []
+    for (let i = 0; i < user.calls.length; i++) {
+      // const element = user.calls[i].id;
+      var obj = {}
+      obj = user.calls[i].id;
+      arr.push(obj)
+    } Call.find({ _id: arr }).then((call) => {
+      if (call) {
+        return res.send(call)
+      }
+    })
+  }).catch((err) => {
+    res.status(500).send({ message: "error" + err })
+  })
+})
+
+app.get("/getCallsPerTeam/:id",authJwt.verifyToken, authJwt.isAdmin,  (req, res) => {
   User.findOne({ employeeId: req.params.id }).then((user) => {
     if (!user) {
       return res.status(404).send({ message: "user not found " })

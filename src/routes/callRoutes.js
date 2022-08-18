@@ -51,7 +51,7 @@ app.get("/getCalls", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
 
   })
 })
-app.post("/addCall", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
+app.post("/addCall",authJwt.verifyToken, authJwt.isAdmin,  (req, res) => {
 
   const newCall = new Call(req.body);
   try {
@@ -81,19 +81,21 @@ app.post("/addCall", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
       throw err
     }
     let dbo = db.db("CRM")
-    dbo.collection("users").findOneAndUpdate({userName: req.user.userName
+    dbo.collection("users").findOneAndUpdate({userName: req.body.userName
     },{ 
         $addToSet: {calls :{id: newCall._id}}
       },(result)=>{
     })
+    User.findOne({userName: req.body.userName}).then((user)=>{
+
     dbo.collection("calls").findOne({ _id: newCall._id }).then((call) => {
       var mailOptions = {
         from: process.env.EMAIL_USERNAME,
-        to: req.user.email,
+        to: user.email,
         subject: 'Open Call Number ' + call._id, // Subject line
         template: "main",
         context: {
-          userName: req.user.userName,
+          userName: req.body.userName,
           CallId: call.CallId,
           description: call.description,
           system: call.system,
@@ -104,13 +106,14 @@ app.post("/addCall", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
       }
       transport.sendMail(mailOptions, function (err, info) {
         if (err) {
-          res.sendStatus(500).send({ message: "Error in sendong email" })
+          res.sendStatus(500).send({ message: "Error in sending email" })
         } else {
           res.sendStatus(200).send({ message: "Success in sending email" })
         }
       });
     })
   })
+})
 })
 
 app.put('/assignAssignee/:id/:assigneeId',authJwt.verifyToken, authJwt.isAdmin,(req,res)=>{
@@ -141,7 +144,7 @@ app.get('/getCalls/:id', authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
   })
 
 })
-app.put('/uploadFile/:id', upload.single("File"), (req, res, next) => {
+app.put('/uploadFile/:id', upload.single("File"),authJwt.verifyToken, authJwt.isAdmin,  (req, res, next) => {
   var img = fs.readFileSync(req.file.path);
   var encode_image = img.toString('base64');
   var finalImg = {
@@ -166,7 +169,7 @@ app.put('/uploadFile/:id', upload.single("File"), (req, res, next) => {
   })
 })
 
-app.delete("/deleteFile/:id/:itemId", (req, res) => {
+app.delete("/deleteFile/:id/:itemId",authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
   MongoClient.connect(process.env.DB_URL, (err, db) => {
     if (err) {
       throw err;
@@ -191,8 +194,9 @@ app.put('/updateCall/:id', authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
       throw err;
     }
     let dbo = db.db("CRM")
-    dbo.collection('calls').findOneAndUpdate({ _id: Number(req.params.id) }, { $set: { userName: req.body.userName, system: req.body.system, status: req.body.status, description: req.body.description, lastUpdater: req.body.userName } }, (err, result) => {
+    dbo.collection('calls').findOneAndUpdate({ _id: Number(req.params.id) }, { $set: { userName: req.body.userName, system: req.body.system, status: req.body.status, team:req.body.team, description: req.body.description, lastUpdater: req.body.userName } }, (err, result) => {
       if (err) {
+        console.log(err);
         res.status(500).send({ message: "Error in updating call" })
       }
       res.status(200).send({ message: "success in updating call" })

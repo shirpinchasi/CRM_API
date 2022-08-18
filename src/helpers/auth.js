@@ -54,40 +54,7 @@ function isAdmin(req, res, next) {
   })
 };
 
-// function isITTeam(req, res, next) {
-//   User.findById(req.user._id).exec((err, user) => {
-//     if (err) {
-//       res.status(500).send({ message: err });
-//       return;
-//     }
-//     for (let i = 0; i < user.team.length; i++) {
-//       const teamNames = user.team[i];
-//     Team.find({teamName:teamNames.teamName},
-//       (err, team) => {
-//         if (err) {
-//           res.status(500).send({ message: err });
-//           return;
-//         }
-//         for (let i = 0; i < team.length; i++) {
-//           for (let j = 0; j < team.teamMembers.length; j++) {
-//             const element = team.teamMembers[j];
-//             console.log(element);
-            
-//           }
-//           if (team[i].teamMembers.includes(user.employeeId)) {
-//                 // console.log(user.employeeId);
-//             // next();
-//             // return;
-//           }
 
-//         }
-
-//       }
-
-//     )
-//   }
-//   })
-// };
 
 const authJwt = {
   verifyToken,
