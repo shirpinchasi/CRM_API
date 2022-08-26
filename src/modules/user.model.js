@@ -49,7 +49,6 @@ const UserSchema = Schema({
 });
 UserSchema.plugin(AutoIncrement, {inc_field: 'employeeId'});
 
-
 UserSchema.methods.setPassword = function (password) {
 
     this.hash = crypto.pbkdf2Sync(password, process.env.SECRET,

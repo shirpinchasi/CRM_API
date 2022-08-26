@@ -24,6 +24,7 @@ const nodemailer = require('nodemailer');
 const bcrypt = require("bcrypt")
 var validator = require('validator');
 const path = require("path");
+var ObjectId = require('mongodb').ObjectId;
 
 
 app.use(cors({
@@ -239,9 +240,9 @@ app.post('/ForgetPassword/:userId/:token', async (req, res) => {
       100000, 64, `sha512`).toString(`hex`);
     const validateNewPassword = crypto.pbkdf2Sync(req.body.passwordConfirmation,
       process.env.SECRET, 100000, 64, `sha512`).toString(`hex`);
-      if(newPassword.includes(user.hash)){
-        return res.status(400).send({ error: "the new password cannot be similar to old password!" })
-      }
+    if (newPassword.includes(user.hash)) {
+      return res.status(400).send({ error: "the new password cannot be similar to old password!" })
+    }
     if (newPassword !== validateNewPassword) {
       return res.status(400).send({ error: "passwords does not match" })
     } else {
@@ -279,7 +280,7 @@ app.post('/ForgetPassword/:userId/:token', async (req, res) => {
 })
 
 
-app.get('/getUser/:employeeId', authJwt.verifyToken, (req, res) => {
+app.get('/getUser/:employeeId', authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
   User.findOne({ employeeId: req.params.employeeId }).then((user) => {
     if (!user) {
       return res.status(404).send({ message: "user not found " })
@@ -303,13 +304,13 @@ app.get("/user/me", authJwt.verifyToken, (req, res) => {
     }
   })
 })
-app.get("/getUserInfo/:id",authJwt.verifyToken, authJwt.isAdmin,(req, res) => {
-  User.findOne({ employeeId:req.params.id}).then((user) => {
+app.get("/getUserInfo/:id", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
+  User.findOne({ employeeId: req.params.id }).then((user) => {
     if (!user) {
       return res.status(404).send({ message: "user not found " })
-    } 
-    Call.find({assignee: user.userName}).then((call)=>{
-      res.status(200).send({ calls:call })
+    }
+    Call.find({ assignee: user.userName }).then((call) => {
+      res.status(200).send({ calls: call })
     })
   }).catch(() => {
     res.status(500).send({ message: "error" })
@@ -317,6 +318,103 @@ app.get("/getUserInfo/:id",authJwt.verifyToken, authJwt.isAdmin,(req, res) => {
 
 })
 
+
+
+app.post('/addUser', verifySignUp.checkDuplicateUserNameOrEmail, authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
+  const user = new User(req.body);
+  // user.setPassword(req.body.password);
+
+  try {
+    const createUser = user.save();
+    res.status(201).json(createUser);
+  } catch (err) {
+    if (err.code === 11000) {
+      res.sendStatus(409)
+      return;
+    }
+    res.sendStatus(500).send({ message: "Error in adding new user" })
+  }
+  const handleOptions = {
+    viewEngine: {
+      layoutsDir: path.resolve("./views/"),
+      defaultLayout: false,
+      partialDir: path.resolve("./views/"),
+    },
+    viewPath: path.resolve("./views/")
+  };
+  transport.use("compile", hbs(handleOptions))
+
+  let resetToken = crypto.randomBytes(32).toString("hex");
+  const hash = crypto.pbkdf2Sync(resetToken, process.env.SECRET,
+    10, 64, `sha512`).toString(`hex`)
+  console.log(user);
+
+  MongoClient.connect(process.env.DB_URL, (err, db) => {
+    if (err) {
+      throw err;
+    }
+    let dbo = db.db("CRM")
+    dbo.collection('users').findOne({ _id: ObjectId(user._id) }).then((user) => {
+      console.log(user);
+      const newToken = new Token({
+        userId: user.employeeId,
+        token: hash,
+        createdAt: Date.now()
+      })
+      newToken.save();
+
+      console.log(user);
+      var mailOptions = {
+        from: process.env.EMAIL_USERNAME,
+        to: user.email,
+        subject: 'New User Opened',
+        template: "newUser",
+        context: {
+          userName: user.userName,
+          link: process.env.BASE_URL + `/ForgetPassword/${user.employeeId}/${hash}`
+        }
+      }
+      transport.sendMail(mailOptions, function (err, info) {
+        if (err) {
+          console.log(err);
+          res.sendStatus(500).send({ message: "Error in sending email" })
+        } else {
+          console.log(info);
+          res.sendStatus(200).send({ message: "Success in sending email" })
+        }
+      });
+    })
+  })
+})
+
+
+
+app.put('/updateUser/:id', authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
+  MongoClient.connect(process.env.DB_URL, (err, db) => {
+    if (err) {
+      throw err;
+    }
+    let dbo = db.db("CRM")
+    dbo.collection('users').findOneAndUpdate({ employeeId: req.params.employeeId }, {
+      $set: {
+        userName: req.body.userName,
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        email: req.body.email,
+        status: req.body.status,
+        lastUpdater: req.body.userName,
+        lastUpdaterDate: Date.now().moment().format("D/MM/YYYY, hh:mm:ss a")
+      },
+    },
+      (err, result) => {
+        if (err) {
+          console.log(err);
+          res.status(500).send({ message: "Error in updating user" })
+        }
+        res.status(200).send({ message: "success in updating user" })
+      })
+  })
+})
 
 
 
@@ -342,7 +440,7 @@ app.get('/logOut', authJwt.verifyToken, (req, res) => {
 });
 
 
-app.get("/getCallsPerUser/:id",authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
+app.get("/getCallsPerUser/:id", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
   User.findOne({ employeeId: req.params.id }).then((user) => {
     if (!user) {
       return res.status(404).send({ message: "user not found " })
@@ -363,19 +461,20 @@ app.get("/getCallsPerUser/:id",authJwt.verifyToken, authJwt.isAdmin, (req, res) 
   })
 })
 
-app.get("/getCallsPerTeam/:id",authJwt.verifyToken, authJwt.isAdmin,  (req, res) => {
+
+app.get("/getCallsPerTeam/:id", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
   User.findOne({ employeeId: req.params.id }).then((user) => {
     if (!user) {
       return res.status(404).send({ message: "user not found " })
     }
     let teams = []
     for (let i = 0; i < user.team.length; i++) {
-     const element = user.team[i].teamName;
-     teams.push(element)
+      const element = user.team[i].teamName;
+      teams.push(element)
     }
-   Call.find({team: teams}).then((team)=>{
-    return res.status(200).send({ teams:team,teamName: teams})
-   })
+    Call.find({ team: teams }).then((team) => {
+      return res.status(200).send({ teams: team, teamName: teams })
+    })
   }).catch((err) => {
     res.status(500).send({ message: "error" + err })
   })

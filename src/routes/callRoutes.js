@@ -10,7 +10,7 @@ const fs = require('fs');
 var moment = require('moment');
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
-var nodemailer = require('nodemailer');
+const nodemailer = require('nodemailer');
 const db = require("../modules/mongoose");
 const User = db.user
 const Call = db.call
@@ -116,6 +116,80 @@ app.post("/addCall",authJwt.verifyToken, authJwt.isAdmin,  (req, res) => {
 })
 })
 
+app.post('/openCall/:id',authJwt.verifyToken, authJwt.isAdmin,(req,res)=>{
+  MongoClient.connect(process.env.DB_URL, (err, db) => {
+    if (err) {
+      throw err;
+    }
+    let dbo = db.db("CRM")
+    dbo.collection('calls').findOneAndUpdate({ _id: Number(req.params.id) }, { $set: { status: "Open" } }, (err, result) => {
+      console.log(result);
+      if (err) {
+        res.status(500).send({ message: "Error in Opening call" })
+      }
+      res.status(200).send({ status: "200", message: "opened call successfully" })
+    })
+  })
+})
+
+
+app.post('/closeCall/:id',authJwt.verifyToken, authJwt.isAdmin,(req,res)=>{
+
+  const handleOptions = {
+    viewEngine: {
+      layoutsDir: path.resolve("./views/"),
+      defaulLayout: false,
+      partialDir: path.resolve("./views/"),
+    },
+    viewPath: path.resolve("./views/")
+  };
+
+  transport.use("compile", hbs(handleOptions))
+
+  MongoClient.connect(process.env.DB_URL, (err, db) => {
+    if (err) {
+      throw err;
+    }
+    let dbo = db.db("CRM")
+    dbo.collection('calls').findOneAndUpdate({ _id: Number(req.params.id) }, { $set: { status: "Closed" } }, (err, result) => {
+      console.log(result);
+      if (err) {
+        res.status(500).send({ message: "Error in Closing Call" })
+      }
+      res.status(200).send({ status: "200", message: "Closed Call successfully" })
+    })
+  })
+  Call.findOne({_id : req.params.id}).then((call)=>{
+    User.findOne({userName : call.userName}).then((user)=>{
+      var mailOptions = {
+        from: process.env.EMAIL_USERNAME,
+        to: user.email,
+        subject: `Call number ${call._id} has been closed`, // Subject line
+        template: "closeCall",
+        context: {
+          userName: call.userName,
+          status :call.status,
+          CallId: call._id,
+          description: call.description,
+          system: call.system,
+          assignee: call.assignee,
+          team : call.team,
+          // link: process.env.BASE_URL+`/callInfo/${call._id}`
+        }
+      }
+      transport.sendMail(mailOptions, function (err, info) {
+        if (err) {
+          res.sendStatus(500).send({ message: "Error in sending email" })
+        } else {
+          res.sendStatus(200).send({ message: "Success in sending email" })
+        }
+      });
+
+    })
+  })
+})
+
+
 app.put('/assignAssignee/:id/:assigneeId',authJwt.verifyToken, authJwt.isAdmin,(req,res)=>{
   User.findOne({employeeId : req.params.assigneeId}).then((user)=>{
     MongoClient.connect(process.env.DB_URL, (err, db) => {
@@ -123,7 +197,7 @@ app.put('/assignAssignee/:id/:assigneeId',authJwt.verifyToken, authJwt.isAdmin,(
         throw err;
       }
       let dbo = db.db("CRM")
-      dbo.collection('calls').findOneAndUpdate({ _id:Number(req.params.id)}, { $set: { assignee:user.userName} }, (err, result) => {
+      dbo.collection('calls').findOneAndUpdate({ _id:Number(req.params.id)}, { $set: { assignee:user.userName, status:"In Progress"} }, (err, result) => {
         if (err) {
           res.status(500).send({ message: "Error in setting assignee" })
         }
@@ -194,7 +268,7 @@ app.put('/updateCall/:id', authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
       throw err;
     }
     let dbo = db.db("CRM")
-    dbo.collection('calls').findOneAndUpdate({ _id: Number(req.params.id) }, { $set: { userName: req.body.userName, system: req.body.system, status: req.body.status, team:req.body.team, description: req.body.description, lastUpdater: req.body.userName } }, (err, result) => {
+    dbo.collection('calls').findOneAndUpdate({ _id: Number(req.params.id) }, { $set: { userName: req.body.userName, system: req.body.system, status: req.body.status,assignee:req.body.assignee , team:req.body.team, description: req.body.description, lastUpdater: req.body.userName } }, (err, result) => {
       if (err) {
         console.log(err);
         res.status(500).send({ message: "Error in updating call" })
