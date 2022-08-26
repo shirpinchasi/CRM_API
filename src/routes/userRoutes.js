@@ -236,6 +236,7 @@ app.post('/ForgetPassword/:userId/:token', async (req, res) => {
 
 
   User.findOne({ employeeId: req.params.userId }).then((user) => {
+    
     const newPassword = crypto.pbkdf2Sync(req.body.password, process.env.SECRET,
       100000, 64, `sha512`).toString(`hex`);
     const validateNewPassword = crypto.pbkdf2Sync(req.body.passwordConfirmation,
@@ -255,6 +256,9 @@ app.post('/ForgetPassword/:userId/:token', async (req, res) => {
           if (err) {
             res.status(500).send({ message: "Error in changing password" })
           }
+          Token.findOneAndDelete({userId : req.params.userId}).then((token)=>{
+            return res.status(410).send({message : "token deleted!"})
+          })
         })
       })
       var mailOptions = {
@@ -320,19 +324,46 @@ app.get("/getUserInfo/:id", authJwt.verifyToken, authJwt.isAdmin, (req, res) => 
 
 
 
-app.post('/addUser', verifySignUp.checkDuplicateUserNameOrEmail, authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
+app.post('/addUser', verifySignUp.checkDuplicateUserNameOrEmail,verifySignUp.checkRolesExistedInAddUser, authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
   const user = new User(req.body);
-  // user.setPassword(req.body.password);
 
-  try {
-    const createUser = user.save();
-    res.status(201).json(createUser);
-  } catch (err) {
-    if (err.code === 11000) {
-      res.sendStatus(409)
-      return;
-    }
-    res.sendStatus(500).send({ message: "Error in adding new user" })
+  if (req.body.roles) {
+    Role.find(
+      {
+        name: { $in: req.body.roles }
+      },
+      (err, roles) => {
+        if (err) {
+          res.status(500).send({ message: err });
+          return;
+        }
+        user.roles = roles.map(role => role._id);
+        user.save(err => {
+          if (err) {
+            res.status(500).send({ message: "error creating role" });
+            return;
+          }
+          res.status(201).send({ message: "User Registered!" });
+        });
+      }
+    );
+  } else {
+    Role.findOne({ name: "user" }, (err, role) => {
+      if (err) {
+        res.status(500).send({ message: err + "error finding role" });
+        return;
+      }
+      user.roles = [role._id];
+
+      user.save(err => {
+        if (err) {
+          console.log(err);
+          res.status(500).send({ message: "error saving user" });
+          return;
+        }
+        return res.status(201).send({ message: "User Registered!" });
+      });
+    });
   }
   const handleOptions = {
     viewEngine: {
