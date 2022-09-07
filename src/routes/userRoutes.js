@@ -139,7 +139,7 @@ app.post("/user/login", (req, res, next) => {
         return res.status(200).send({
           userName: user.userName,
           user: token,
-          redirectUrl: `/adminPanel/${user.employeeId}`
+          redirectUrl: `/AdminPanel`
         })
       } else {
         return res.status(200).send({
@@ -316,7 +316,8 @@ app.get("/getUserInfo", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
     if (!user) {
       return res.status(404).send({ message: "user not found " })
     } else {
-      let teams = []
+      var teams = []
+      if(user.team === undefined ? teams = 0 : teams = [])
       for (let i = 0; i < user.team.length; i++) {
         const element = user.team[i].teamName;
         teams.push(element)
