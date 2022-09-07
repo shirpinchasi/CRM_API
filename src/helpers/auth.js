@@ -25,6 +25,9 @@ async function verifyToken(req, res, next) {
   }
 };
 
+
+
+
 function isAdmin(req, res, next) {
   User.findById(req.user._id).exec((err, user) => {
     if (err) {

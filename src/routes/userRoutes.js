@@ -236,7 +236,7 @@ app.post('/ForgetPassword/:userId/:token', async (req, res) => {
 
 
   User.findOne({ employeeId: req.params.userId }).then((user) => {
-    
+
     const newPassword = crypto.pbkdf2Sync(req.body.password, process.env.SECRET,
       100000, 64, `sha512`).toString(`hex`);
     const validateNewPassword = crypto.pbkdf2Sync(req.body.passwordConfirmation,
@@ -256,8 +256,8 @@ app.post('/ForgetPassword/:userId/:token', async (req, res) => {
           if (err) {
             res.status(500).send({ message: "Error in changing password" })
           }
-          Token.findOneAndDelete({userId : req.params.userId}).then((token)=>{
-            return res.status(410).send({message : "token deleted!"})
+          Token.findOneAndDelete({ userId: req.params.userId }).then((token) => {
+            return res.status(410).send({ message: "token deleted!" })
           })
         })
       })
@@ -294,10 +294,11 @@ app.get('/getUser/:employeeId', authJwt.verifyToken, authJwt.isAdmin, (req, res)
   })
 
 })
-app.get("/adminPanel", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
-  res.send({ data: req.user })
-  res.end();
-});
+// app.get("/adminPanel", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
+//   console.log(req.user);
+//   res.send({ data: req.user })
+//   res.end();
+// });
 
 app.get("/user/me", authJwt.verifyToken, (req, res) => {
   Role.findById({ _id: req.user.roles }).then((role) => {
@@ -308,15 +309,37 @@ app.get("/user/me", authJwt.verifyToken, (req, res) => {
     }
   })
 })
-app.get("/getUserInfo/:id", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
-  User.findOne({ employeeId: req.params.id }).then((user) => {
+
+
+app.get("/getUserInfo", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
+  User.findById({ _id: ObjectId(req.user._id) }).then((user) => {
     if (!user) {
       return res.status(404).send({ message: "user not found " })
+    } else {
+      let teams = []
+      for (let i = 0; i < user.team.length; i++) {
+        const element = user.team[i].teamName;
+        teams.push(element)
+      }
+      var arr = []
+      for (let i = 0; i < user.calls.length; i++) {
+
+        var obj = {}
+        obj = user.calls[i].id;
+        arr.push(obj)
+      } Call.find({ _id: arr }).then((call) => {
+        
+        Call.find({ team: teams }).then((team) => {
+          return res.status(200).send({ teams: team, teamName: teams,calls: call, data: req.user })
+        })
+        // if (call) {
+        //   return res.status(200).send({  })
+        // }
+      })
     }
-    Call.find({ assignee: user.userName }).then((call) => {
-      res.status(200).send({ calls: call })
-    })
-  }).catch(() => {
+
+  }).catch((error) => {
+    console.log(error);
     res.status(500).send({ message: "error" })
   })
 
@@ -324,7 +347,7 @@ app.get("/getUserInfo/:id", authJwt.verifyToken, authJwt.isAdmin, (req, res) => 
 
 
 
-app.post('/addUser', verifySignUp.checkDuplicateUserNameOrEmail,verifySignUp.checkRolesExistedInAddUser, authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
+app.post('/addUser', verifySignUp.checkDuplicateUserNameOrEmail, verifySignUp.checkRolesExistedInAddUser, authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
   const user = new User(req.body);
 
   if (req.body.roles) {
@@ -476,17 +499,7 @@ app.get("/getCallsPerUser/:id", authJwt.verifyToken, authJwt.isAdmin, (req, res)
     if (!user) {
       return res.status(404).send({ message: "user not found " })
     }
-    var arr = []
-    for (let i = 0; i < user.calls.length; i++) {
-      // const element = user.calls[i].id;
-      var obj = {}
-      obj = user.calls[i].id;
-      arr.push(obj)
-    } Call.find({ _id: arr }).then((call) => {
-      if (call) {
-        return res.send(call)
-      }
-    })
+
   }).catch((err) => {
     res.status(500).send({ message: "error" + err })
   })
@@ -498,14 +511,7 @@ app.get("/getCallsPerTeam/:id", authJwt.verifyToken, authJwt.isAdmin, (req, res)
     if (!user) {
       return res.status(404).send({ message: "user not found " })
     }
-    let teams = []
-    for (let i = 0; i < user.team.length; i++) {
-      const element = user.team[i].teamName;
-      teams.push(element)
-    }
-    Call.find({ team: teams }).then((team) => {
-      return res.status(200).send({ teams: team, teamName: teams })
-    })
+
   }).catch((err) => {
     res.status(500).send({ message: "error" + err })
   })
