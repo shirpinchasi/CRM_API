@@ -329,10 +329,14 @@ app.get("/getUserInfo", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
         obj = user.calls[i].id;
         arr.push(obj)
       } Call.find({ _id: arr }).then((call) => {
+        Call.find({assignee : req.user.userName}).then((assign)=>{
+          
+        
         
         Call.find({ team: teams }).then((team) => {
-          return res.status(200).send({ teams: team, teamName: teams,calls: call, data: req.user })
+          return res.status(200).send({ teams: team, teamName: teams,calls: assign, data: req.user })
         })
+      })
         // if (call) {
         //   return res.status(200).send({  })
         // }
@@ -444,7 +448,7 @@ app.post('/addUser', verifySignUp.checkDuplicateUserNameOrEmail, verifySignUp.ch
 
 
 
-app.put('/updateUser/:id', authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
+app.put('/updateUser/:id',verifySignUp.checkDuplicateUserNameOrEmail, authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
   MongoClient.connect(process.env.DB_URL, (err, db) => {
     if (err) {
       throw err;
