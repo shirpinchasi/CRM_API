@@ -462,6 +462,7 @@ app.put('/updateUser/:id',verifySignUp.checkDuplicateUserNameOrEmail, authJwt.ve
         email: req.body.email,
         status: req.body.status,
         lastUpdater: req.body.userName,
+        team : req.body.team,
         lastUpdaterDate: Date.now().moment().format("D/MM/YYYY, hh:mm:ss a")
       },
     },
@@ -504,6 +505,15 @@ app.get("/getCallsPerUser/:id", authJwt.verifyToken, authJwt.isAdmin, (req, res)
     if (!user) {
       return res.status(404).send({ message: "user not found " })
     }
+    var arr = []
+      for (let i = 0; i < user.calls.length; i++) {
+
+        var obj = {}
+        obj = user.calls[i].id;
+        arr.push(obj)
+      } Call.find({ _id: arr }).then((call) => {
+          return res.status(200).send({ calls: call})
+      })
 
   }).catch((err) => {
     res.status(500).send({ message: "error" + err })

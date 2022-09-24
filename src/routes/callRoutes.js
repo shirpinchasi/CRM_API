@@ -52,7 +52,6 @@ app.get("/getCalls", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
   })
 })
 app.post("/addCall",authJwt.verifyToken, authJwt.isAdmin,  (req, res) => {
-
   const newCall = new Call(req.body);
   try {
     const createCall = newCall.save();
@@ -87,7 +86,6 @@ app.post("/addCall",authJwt.verifyToken, authJwt.isAdmin,  (req, res) => {
       },(result)=>{
     })
     User.findOne({userName: req.body.userName}).then((user)=>{
-
     dbo.collection("calls").findOne({ _id: newCall._id }).then((call) => {
       var mailOptions = {
         from: process.env.EMAIL_USERNAME,
@@ -268,7 +266,8 @@ app.put('/updateCall/:id', authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
       throw err;
     }
     let dbo = db.db("CRM")
-    dbo.collection('calls').findOneAndUpdate({ _id: Number(req.params.id) }, { $set: { userName: req.body.userName, system: req.body.system, status: req.body.status,assignee:req.body.assignee , team:req.body.team, description: req.body.description, lastUpdater: req.body.userName } }, (err, result) => {
+    
+    dbo.collection('calls').findOneAndUpdate({ _id: Number(req.params.id) }, { $set: { userName: req.body.userName, system: req.body.system, status: req.body.status,assignee:req.body.assignee , team:req.body.team, description: req.body.description, lastUpdater: req.user.userName } }, (err, result) => {
       if (err) {
         console.log(err);
         res.status(500).send({ message: "Error in updating call" })
