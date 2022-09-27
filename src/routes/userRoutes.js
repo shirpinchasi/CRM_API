@@ -303,7 +303,7 @@ app.get('/getUser/:employeeId', authJwt.verifyToken, authJwt.isAdmin, (req, res)
 app.get("/user/me", authJwt.verifyToken, (req, res) => {
   Role.findById({ _id: req.user.roles }).then((role) => {
     if (role.name === "admin") {
-      return res.status(200).send({ valid: "admin", user: req.user })
+      return res.status(200).send({ valid: "admin",userInfo:{userName:req.user.userName,email:req.user.email,employeeId:req.user.employeeId}})
     } else if (role.name === "user") {
       return res.status(200).send({ valid: "user", user: req.user })
     }
@@ -334,7 +334,7 @@ app.get("/getUserInfo", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
         
         
         Call.find({ team: teams }).then((team) => {
-          return res.status(200).send({ teams: team, teamName: teams,calls: assign, data: req.user })
+          return res.status(200).send({ teams: team, teamName: teams,calls: assign})
         })
       })
         // if (call) {
