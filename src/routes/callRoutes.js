@@ -113,9 +113,9 @@ app.post("/addCall",authJwt.verifyToken, authJwt.isAdmin,  (req, res) => {
       }
       transport.sendMail(mailOptions, function (err, info) {
         if (err) {
-          res.sendStatus(500).send({ message: "Error in sending email" })
+          res.status(500).send({ message: "Error in sending email" })
         } else {
-          res.sendStatus(200).send({ message: "Success in sending email" })
+          res.status(200).send({ message: "Success in sending email" })
         }
       });
     })
