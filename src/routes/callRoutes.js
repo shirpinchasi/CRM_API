@@ -42,6 +42,13 @@ let transport = nodemailer.createTransport({
     pass: process.env.EMAIL_PASSWORD
   }
 });
+transport.verify(function (error, success) {
+  if (error) {
+    console.log(error);
+  } else {
+    console.log("Server is ready to take our messages");
+  }
+});
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
