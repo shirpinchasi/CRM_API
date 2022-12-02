@@ -42,13 +42,13 @@ let transport = nodemailer.createTransport({
     pass: process.env.EMAIL_PASSWORD
   }
 });
-transport.verify(function (error, success) {
-  if (error) {
-    console.log(error);
-  } else {
-    console.log("Server is ready to take our messages");
-  }
-});
+// transport.verify(function (error, success) {
+//   if (error) {
+//     console.log(error);
+//   } else {
+//     console.log("Server is ready to take our messages");
+//   }
+// });
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -78,7 +78,6 @@ app.post("/addCall",authJwt.verifyToken, authJwt.isAdmin,  (req, res) => {
       res.sendStatus(409);
       return;
     }
-    console.log("this is error");
     res.sendStatus(500).send({message:"Error in adding new call"})
   }
 
@@ -121,10 +120,8 @@ app.post("/addCall",authJwt.verifyToken, authJwt.isAdmin,  (req, res) => {
       }
       transport.sendMail(mailOptions, function (err, info) {
         if (err) {
-          console.log(err);
           res.status(500).send({ message: "Error in sending email" })
         } else {
-          console.log("success");
           res.status(200).send({ message: "Success in sending email" })
         }
       });
