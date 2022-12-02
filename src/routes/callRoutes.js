@@ -188,7 +188,6 @@ app.post('/closeCall/:id',authJwt.verifyToken, authJwt.isAdmin,(req,res)=>{
           }
           transport.sendMail(mailOptions, function (err, info) {
             if (err) {
-              console.log(err);
               res.sendStatus(500).send({ message: "Error in sending email" })
             } else {
               res.sendStatus(200).send({ message: "Success in sending email" })

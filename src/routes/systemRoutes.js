@@ -23,7 +23,6 @@ app.get("/system", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
 
 app.post("/addSystem", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
   const newSystem = new System(req.body);
-  console.log(req.body);
   System.findOne({systemName: req.body.systemName}).exec((err, system) => {
       // if (!req.body.systemName) {
       //   res.status(406).send({ message: "system name Required!" });

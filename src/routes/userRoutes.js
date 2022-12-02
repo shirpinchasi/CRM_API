@@ -420,8 +420,6 @@ app.put('/updateUser/:id', authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
     if (err) {
       throw err;
     }
-    console.log(req.body);
-    console.log(req.params.id);
     let dbo = db.db("CRM")
     dbo.collection('users').findOneAndUpdate({ employeeId: Number(req.params.id) }, {
       $set: {
