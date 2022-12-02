@@ -23,16 +23,28 @@ app.get("/system", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
 
 app.post("/addSystem", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
   const newSystem = new System(req.body);
-  try {
-    const createSystem = newSystem.save();
-    res.status(201).json(createSystem);
-  } catch (err) {
-    if (err.code === 11000) {
-      res.sendStatus(409);
-      return;
-    }
-    res.sendStatus(500).send({ message: "Error in adding system" })
-  }
+  console.log(req.body);
+  System.findOne({systemName: req.body.systemName}).exec((err, system) => {
+      // if (!req.body.systemName) {
+      //   res.status(406).send({ message: "system name Required!" });
+      //   return;
+      // }
+      if (system) {
+        res.status(409).send({status:409, message: "Failed! System Name already exist!" });
+        return;
+      }
+      try {
+        const createSystem = newSystem.save();
+        res.status(201).send({status:201,system:createSystem});
+      } catch (err) {
+        if (err.code === 11000) {
+          res.sendStatus(409);
+          return;
+        }
+        res.sendStatus(500).send({ message: "Error in adding system" })
+      }
+
+  })
 })
 
 module.exports = app;

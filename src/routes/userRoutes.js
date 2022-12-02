@@ -37,7 +37,7 @@ app.use(function (req, res, next) {
   res.setHeader(
     'Access-Control-Allow-Headers',
     'x-access-token, Origin, Content-Type, Accept',
-    'Access-Control-Allow-Origin', 'true'
+    'Access-Control-Allow-Origin', '*'
   );
   next();
 });
@@ -288,24 +288,18 @@ app.get('/getUser/:employeeId', authJwt.verifyToken, authJwt.isAdmin, (req, res)
   User.findOne({ employeeId: req.params.employeeId }).then((user) => {
     if (!user) {
       return res.status(404).send({ message: "user not found " })
-    } res.send({ user });
+    } res.send({ user:{userName:user.userName,firstName:user.firstName,status:user.status,lastName:user.lastName,openingDate:user.openingDate,lastUpdater:user.lastUpdater,email:user.email,team:user.team,employeeId:user.employeeId} });
   }).catch(() => {
     res.status(500).send({ message: "error" })
   })
 
 })
-// app.get("/adminPanel", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
-//   console.log(req.user);
-//   res.send({ data: req.user })
-//   res.end();
-// });
-
 app.get("/user/me", authJwt.verifyToken, (req, res) => {
   Role.findById({ _id: req.user.roles }).then((role) => {
     if (role.name === "admin") {
-      return res.status(200).send({ valid: "admin",userInfo:{userName:req.user.userName,email:req.user.email,employeeId:req.user.employeeId}})
+      return res.status(200).send({ valid: "admin",menuItems:{newCallButton:"New Call",newSystemButton:"New System"},userInfo:{userName:req.user.userName,email:req.user.email,team:req.user.team,employeeId:req.user.employeeId}})
     } else if (role.name === "user") {
-      return res.status(200).send({ valid: "user", user: req.user })
+      return res.status(200).send({ valid: "user", userInfo:{userName:req.user.userName,email:req.user.email,team:req.user.team,employeeId:req.user.employeeId} })
     }
   })
 })
@@ -316,35 +310,14 @@ app.get("/getUserInfo", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
     if (!user) {
       return res.status(404).send({ message: "user not found " })
     } else {
-      var teams = []
-      if(user.team === undefined ? teams = 0 : teams = [])
-      for (let i = 0; i < user.team.length; i++) {
-        const element = user.team[i].teamName;
-        teams.push(element)
-      }
-      var arr = []
-      for (let i = 0; i < user.calls.length; i++) {
-
-        var obj = {}
-        obj = user.calls[i].id;
-        arr.push(obj)
-      } Call.find({ _id: arr }).then((call) => {
         Call.find({assignee : req.user.userName}).then((assign)=>{
-          
-        
-        
-        Call.find({ team: teams }).then((team) => {
-          return res.status(200).send({ teams: team, teamName: teams,calls: assign})
+        Call.find({team: user.team}).then((team) => {
+          return res.status(200).send({ teams: team,calls:assign})
         })
-      })
-        // if (call) {
-        //   return res.status(200).send({  })
-        // }
       })
     }
 
   }).catch((error) => {
-    console.log(error);
     res.status(500).send({ message: "error" })
   })
 
@@ -385,7 +358,6 @@ app.post('/addUser', verifySignUp.checkDuplicateUserNameOrEmail, verifySignUp.ch
 
       user.save(err => {
         if (err) {
-          console.log(err);
           res.status(500).send({ message: "error saving user" });
           return;
         }
@@ -406,7 +378,6 @@ app.post('/addUser', verifySignUp.checkDuplicateUserNameOrEmail, verifySignUp.ch
   let resetToken = crypto.randomBytes(32).toString("hex");
   const hash = crypto.pbkdf2Sync(resetToken, process.env.SECRET,
     10, 64, `sha512`).toString(`hex`)
-  console.log(user);
 
   MongoClient.connect(process.env.DB_URL, (err, db) => {
     if (err) {
@@ -414,7 +385,6 @@ app.post('/addUser', verifySignUp.checkDuplicateUserNameOrEmail, verifySignUp.ch
     }
     let dbo = db.db("CRM")
     dbo.collection('users').findOne({ _id: ObjectId(user._id) }).then((user) => {
-      console.log(user);
       const newToken = new Token({
         userId: user.employeeId,
         token: hash,
@@ -422,7 +392,6 @@ app.post('/addUser', verifySignUp.checkDuplicateUserNameOrEmail, verifySignUp.ch
       })
       newToken.save();
 
-      console.log(user);
       var mailOptions = {
         from: process.env.EMAIL_USERNAME,
         to: user.email,
@@ -435,10 +404,8 @@ app.post('/addUser', verifySignUp.checkDuplicateUserNameOrEmail, verifySignUp.ch
       }
       transport.sendMail(mailOptions, function (err, info) {
         if (err) {
-          console.log(err);
           res.sendStatus(500).send({ message: "Error in sending email" })
         } else {
-          console.log(info);
           res.sendStatus(200).send({ message: "Success in sending email" })
         }
       });
@@ -448,27 +415,28 @@ app.post('/addUser', verifySignUp.checkDuplicateUserNameOrEmail, verifySignUp.ch
 
 
 
-app.put('/updateUser/:id',verifySignUp.checkDuplicateUserNameOrEmail, authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
+app.put('/updateUser/:id', authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
   MongoClient.connect(process.env.DB_URL, (err, db) => {
     if (err) {
       throw err;
     }
+    console.log(req.body);
+    console.log(req.params.id);
     let dbo = db.db("CRM")
-    dbo.collection('users').findOneAndUpdate({ employeeId: req.params.employeeId }, {
+    dbo.collection('users').findOneAndUpdate({ employeeId: Number(req.params.id) }, {
       $set: {
         userName: req.body.userName,
         firstName: req.body.firstName,
         lastName: req.body.lastName,
         email: req.body.email,
         status: req.body.status,
-        lastUpdater: req.body.userName,
+        lastUpdater: req.body.lastUpdater,
         team : req.body.team,
-        lastUpdaterDate: Date.now().moment().format("D/MM/YYYY, hh:mm:ss a")
+        // lastUpdaterDate:Date.now()
       },
     },
       (err, result) => {
         if (err) {
-          console.log(err);
           res.status(500).send({ message: "Error in updating user" })
         }
         res.status(200).send({ message: "success in updating user" })

@@ -18,6 +18,16 @@ const hbs = require("nodemailer-express-handlebars")
 const path = require("path")
 require('dotenv').config({ path: '.env' });
 const crypto = require("crypto");
+const { forEach } = require("async");
+var maxSize = 10000000;
+var whiteList=[
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".jfif",
+  '.csv',
+  '.plain',
+]
 
 
 let transport = nodemailer.createTransport({
@@ -39,7 +49,7 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage: storage })
+const upload = multer({ storage: storage,limits:{fileSize:maxSize}})
 
 app.get("/getCalls", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
   Call.find((err, docs) => {
@@ -83,14 +93,13 @@ app.post("/addCall",authJwt.verifyToken, authJwt.isAdmin,  (req, res) => {
     dbo.collection("users").findOneAndUpdate({userName: req.body.userName
     },{ 
         $addToSet: {calls :{id: newCall._id}}
-      },(result)=>{
-    })
+      })
     User.findOne({userName: req.body.userName}).then((user)=>{
     dbo.collection("calls").findOne({ _id: newCall._id }).then((call) => {
       var mailOptions = {
         from: process.env.EMAIL_USERNAME,
         to: user.email,
-        subject: 'Open Call Number ' + call._id, // Subject line
+        subject: 'Open Call Number ' + call._id,
         template: "main",
         context: {
           userName: req.body.userName,
@@ -120,8 +129,7 @@ app.post('/openCall/:id',authJwt.verifyToken, authJwt.isAdmin,(req,res)=>{
       throw err;
     }
     let dbo = db.db("CRM")
-    dbo.collection('calls').findOneAndUpdate({ _id: Number(req.params.id) }, { $set: { status: "Open" } }, (err, result) => {
-      console.log(result);
+    dbo.collection('calls').findOneAndUpdate({ _id: Number(req.params.id) }, { $set: { status: "Open",lastUpdater: req.user.userName } }, (err, result) => {
       if (err) {
         res.status(500).send({ message: "Error in Opening call" })
       }
@@ -136,12 +144,11 @@ app.post('/closeCall/:id',authJwt.verifyToken, authJwt.isAdmin,(req,res)=>{
   const handleOptions = {
     viewEngine: {
       layoutsDir: path.resolve("./views/"),
-      defaulLayout: false,
+      defaultLayout: false,
       partialDir: path.resolve("./views/"),
     },
     viewPath: path.resolve("./views/")
   };
-
   transport.use("compile", hbs(handleOptions))
 
   MongoClient.connect(process.env.DB_URL, (err, db) => {
@@ -149,40 +156,38 @@ app.post('/closeCall/:id',authJwt.verifyToken, authJwt.isAdmin,(req,res)=>{
       throw err;
     }
     let dbo = db.db("CRM")
-    dbo.collection('calls').findOneAndUpdate({ _id: Number(req.params.id) }, { $set: { status: "Closed" } }, (err, result) => {
-      console.log(result);
+    dbo.collection('calls').findOneAndUpdate({ _id: Number(req.params.id) }, { $set: {lastUpdater: req.user.userName, status: "Closed",closingDate: moment().format("D/MM/YYYY, hh:mm:ss a").toLocaleString("he-IL") }},{returnDocument:'after'}, (err, result) => {
       if (err) {
         res.status(500).send({ message: "Error in Closing Call" })
-      }
+      }else{
       res.status(200).send({ status: "200", message: "Closed Call successfully" })
-    })
-  })
-  Call.findOne({_id : req.params.id}).then((call)=>{
-    User.findOne({userName : call.userName}).then((user)=>{
-      var mailOptions = {
-        from: process.env.EMAIL_USERNAME,
-        to: user.email,
-        subject: `Call number ${call._id} has been closed`, // Subject line
-        template: "closeCall",
-        context: {
-          userName: call.userName,
-          status :call.status,
-          CallId: call._id,
-          description: call.description,
-          system: call.system,
-          assignee: call.assignee,
-          team : call.team,
-          // link: process.env.BASE_URL+`/callInfo/${call._id}`
-        }
       }
-      transport.sendMail(mailOptions, function (err, info) {
-        if (err) {
-          res.sendStatus(500).send({ message: "Error in sending email" })
-        } else {
-          res.sendStatus(200).send({ message: "Success in sending email" })
-        }
-      });
-
+        User.findOne({userName :result.value.userName}).then((user)=>{
+          var mailOptions = {
+            from: process.env.EMAIL_USERNAME,
+            to: user.email,
+            subject: `Call number ${result.value._id} has been closed`, 
+            template: "closeCall",
+            context: {
+              userName: result.value.userName,
+              status : result.value.status,
+              CallId:result.value._id,
+              description: result.value.description,
+              system: result.value.system,
+              assignee: result.value.assignee,
+              team : result.value.team,
+              closingDate: result.value.closingDate
+            }
+          }
+          transport.sendMail(mailOptions, function (err, info) {
+            if (err) {
+              console.log(err);
+              res.sendStatus(500).send({ message: "Error in sending email" })
+            } else {
+              res.sendStatus(200).send({ message: "Success in sending email" })
+            }
+          });
+        })
     })
   })
 })
@@ -216,8 +221,14 @@ app.get('/getCalls/:id', authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
   })
 
 })
-app.put('/uploadFile/:id', upload.single("File"),authJwt.verifyToken, authJwt.isAdmin,  (req, res, next) => {
-  var img = fs.readFileSync(req.file.path);
+
+var uploadFile = upload.single("File")
+app.put('/uploadFile/:id',authJwt.verifyToken, authJwt.isAdmin,  (req, res, next) => {
+  uploadFile(req,res,function(err){
+    if(err instanceof multer.MulterError){
+      res.status(500).send({message:"File size exedded!"})
+    }else{
+      var img = fs.readFileSync(req.file.path);
   var encode_image = img.toString('base64');
   var finalImg = {
     itemId: crypto.randomBytes(2).toString("hex"),
@@ -239,6 +250,10 @@ app.put('/uploadFile/:id', upload.single("File"),authJwt.verifyToken, authJwt.is
       res.status(200).send({ status: "200", message: "uploded file successfully" })
     })
   })
+    }
+  })
+  
+
 })
 
 app.delete("/deleteFile/:id/:itemId",authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
@@ -269,7 +284,6 @@ app.put('/updateCall/:id', authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
     
     dbo.collection('calls').findOneAndUpdate({ _id: Number(req.params.id) }, { $set: { userName: req.body.userName, system: req.body.system, status: req.body.status,assignee:req.body.assignee , team:req.body.team, description: req.body.description, lastUpdater: req.user.userName } }, (err, result) => {
       if (err) {
-        console.log(err);
         res.status(500).send({ message: "Error in updating call" })
       }
       res.status(200).send({ message: "success in updating call" })

@@ -8,9 +8,12 @@ const AutoIncrement = AutoIncrementFactory(connection);
 
 
 const Teams = new Schema({
+    _id:{
+        type:Number
+    },
    
     teamName: {
-        type: Object
+        type: String
     },
     teamMembers:
         {

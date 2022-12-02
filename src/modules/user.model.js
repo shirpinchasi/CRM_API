@@ -45,7 +45,14 @@ const UserSchema = Schema({
         {
             type: Array,
             ref: "Call"
-        }
+        },
+    lastUpdater:{
+        type:String
+    },
+    // lastUpdaterDate:{
+    //     type:String,
+    //     default: () => moment().format("D/MM/YYYY, hh:mm:ss a")
+    // }
 });
 UserSchema.plugin(AutoIncrement, {inc_field: 'employeeId'});
 

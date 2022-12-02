@@ -57,6 +57,9 @@ var Calls = Schema({
     },
     link:{
         type:String
+    },
+    closingDate:{
+        type:String
     }
 });
 Calls.plugin(AutoIncrement, {inc_field: '_id'});
