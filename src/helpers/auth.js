@@ -2,7 +2,9 @@ const jwt = require("jsonwebtoken");
 const db = require("../modules/mongoose");
 const User = db.user;
 const Role = db.role;
-
+const Team = db.team
+const express = require("express");
+const app = express();
 
 async function verifyToken(req, res, next) {
   const token = req.cookies[process.env.COOKIE_NAME];
@@ -13,15 +15,17 @@ async function verifyToken(req, res, next) {
     const payload = jwt.verify(token, process.env.SECRET);
     const user = await User.findById(payload.id);
     if (!user) {
-      return res.status(403).send({ messege: "unauthorized" })
+      return res.status(401).send({ messege: "unauthorized" })
 
     }
     req.user = user;
     next();
   } catch (err) {
-    res.sendStatus(403)
+    res.sendStatus(500)
   }
 };
+
+
 
 
 function isAdmin(req, res, next) {
@@ -36,26 +40,28 @@ function isAdmin(req, res, next) {
       },
       (err, roles) => {
         if (err) {
-
           res.status(500).send({ message: err });
           return;
         }
         for (let i = 0; i < roles.length; i++) {
           if (roles[i].name === "admin") {
-
             next();
             return;
           }
+
         }
-        res.status(403).send({ sendStatus: 403, message: "Require Admin Role!" });
+
       }
+
     )
   })
 };
 
 
+
 const authJwt = {
   verifyToken,
-  isAdmin
+  isAdmin,
+  // isITTeam
 };
 module.exports = authJwt;

@@ -1,7 +1,6 @@
 {
   "name": "crm-api",
   "version": "1.0.0",
-  "description": "",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -11,18 +10,29 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "body-parser": "^1.19.1",
+    "async": "^3.2.4",
+    "bcrypt": "^5.1.0",
+    "body-parser": "^1.20.1",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "crypto-js": "^4.1.1",
+<<<<<<< HEAD
     "csurf": "^1.11.0",
     "dotenv": "^16.0.0",
     "express": "^4.17.1",
     "express-jwt": "^1.2.0",
     "express-session": "^1.17.2",
+=======
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "express-jwt": "^7.7.7",
+    "express-openid-connect": "^2.10.0",
+>>>>>>> 9ad50fb2e9f3c1be3685a94a92e5940fad3a7b98
     "fs": "0.0.1-security",
-    "jsonwebtoken": "^8.5.1",
+    "hbs": "^4.2.0",
+    "jsonwebtoken": "^9.0.0",
     "md5": "^2.3.0",
+<<<<<<< HEAD
     "moment": "^2.29.1",
     "mongoose": "^6.0.13",
     "mongoose-auto-increment": "^5.0.1",
@@ -30,9 +40,29 @@
     "node-modules": "^0.0.1",
     "serve": "^13.0.2",
     "uuid": "^8.3.2",
+=======
+    "moment": "^2.29.4",
+    "mongoose": "^6.7.5",
+    "mongoose-sequence": "^5.3.1",
+    "mongoose-sequence-plugin": "^1.0.5",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.8.0",
+    "nodemailer-express-handlebars": "^5.0.0",
+    "npm": "^8.13.2",
+    "serve": "^14.1.2",
+>>>>>>> 9ad50fb2e9f3c1be3685a94a92e5940fad3a7b98
     "validator": "^13.7.0"
   },
   "devDependencies": {
-    "nodemon": "^2.0.12"
-  }
+    "nodemon": "^2.0.20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shirpinchasi/CRM_API.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shirpinchasi/CRM_API/issues"
+  },
+  "homepage": "https://github.com/shirpinchasi/CRM_API#readme",
+  "description": ""
 }

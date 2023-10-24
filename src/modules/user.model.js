@@ -1,24 +1,15 @@
 const mongoose = require("mongoose");
+const { Schema } = mongoose;
 const crypto = require("crypto");
 var moment = require('moment');
-const autoIncrement = require('mongoose-auto-increment');
+const AutoIncrementFactory = require('mongoose-sequence');
+const Call = require("./call.model");
 var connection = mongoose.createConnection(process.env.DB_URL);
-autoIncrement.initialize(connection);
+const AutoIncrement = AutoIncrementFactory(connection);
 
+const UserSchema = Schema({
 
-
-const UserSchema = mongoose.Schema({
-    role: {
-        type: String,
-    },
     hash: String,
-    // password : {
-    //     type : String,
-    //     required : true,
-    // },
-    employeeId: {
-        type: Number
-    },
     userName: {
         type: String,
         required: true,
@@ -38,32 +29,32 @@ const UserSchema = mongoose.Schema({
     },
     openingDate: {
         type: String,
-        default: () => moment().format("d/MM/YYYY, hh:mm:ss a")
+        default: () => moment().format("D/MM/YYYY, hh:mm:ss a")
     },
-    roles: [
+    roles:
+            {
+                type: Array,
+                ref: "Role"
+            },
+    team:
+    {
+        type: Object,
+        ref: "Team"
+    },
+    calls:
         {
-            type: String,
-            ref: "Role"
-        }
-    ],
-    team: 
-        {
-            type: String,
-            ref: "Team"
+            type: Array,
+            ref: "Call"
         },
-    calls: [
-        {
-            type: String,
-            ref: "Calls"
-        }
-    ]
+    lastUpdater:{
+        type:String
+    },
+    // lastUpdaterDate:{
+    //     type:String,
+    //     default: () => moment().format("D/MM/YYYY, hh:mm:ss a")
+    // }
 });
-UserSchema.plugin(autoIncrement.plugin, {
-    model: 'UserSchema',
-    field: 'employeeId',
-    startAt: 1
-});
-
+UserSchema.plugin(AutoIncrement, {inc_field: 'employeeId'});
 
 UserSchema.methods.setPassword = function (password) {
 
@@ -76,4 +67,5 @@ UserSchema.methods.validPassword = function (password) {
     return this.hash === hash;
 };
 
-const User = module.exports = mongoose.model('User', UserSchema); 
+const User = mongoose.model('User', UserSchema);
+module.exports = User
