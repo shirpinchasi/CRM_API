@@ -49,8 +49,8 @@ function listen() {
 }
 db.mongoose
     .connect(process.env.DB_URL,{
-        useNewUrlParser: true,
-        useUnifiedTopology : true
+        // useNewUrlParser: true,
+        // useUnifiedTopology : true,
     })
     .then(()=>{
         console.log("connected to db");

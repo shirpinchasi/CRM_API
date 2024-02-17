@@ -102,12 +102,18 @@ app.post("/addCall",authJwt.verifyToken, authJwt.isAdmin,  (req, res) => {
         $addToSet: {calls :{id: newCall._id}}
       })
     User.findOne({userName: req.body.userName}).then((user)=>{
+    const picPath = path.join(__dirname, '..','..','public','Pictures','linkedin_banner_image.png');
     dbo.collection("calls").findOne({ _id: newCall._id }).then((call) => {
       var mailOptions = {
         from: process.env.EMAIL_USERNAME,
         to: user.email,
         subject: 'Open Call Number ' + call._id,
         template: "main",
+        attachments: [{
+          filename: 'linkedin_banner_image.png',
+          path: picPath,
+          cid: 'logo' 
+     }],
         context: {
           userName: req.body.userName,
           CallId: call.CallId,
@@ -120,6 +126,7 @@ app.post("/addCall",authJwt.verifyToken, authJwt.isAdmin,  (req, res) => {
       }
       transport.sendMail(mailOptions, function (err, info) {
         if (err) {
+          console.log(err);
           res.status(500).send({ message: "Error in sending email" })
         } else {
           res.status(200).send({ message: "Success in sending email" })

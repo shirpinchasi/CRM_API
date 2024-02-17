@@ -27,6 +27,7 @@ const path = require("path");
 var ObjectId = require('mongodb').ObjectId;
 
 
+
 app.use(cors({
   origin: true,
   credentials: true
@@ -60,7 +61,7 @@ app.post("/user/signup", verifySignUp.checkDuplicateUserNameOrEmail, verifySignU
   const user = new User(req.body);
   user.email = req.body.email
   user.setPassword(req.body.password);
-
+  console.log(user);
   user.save((err, user) => {
     if (err) {
       res.status(500).send({ message: "You Need To Provide User Name!" });
@@ -99,6 +100,7 @@ app.post("/user/signup", verifySignUp.checkDuplicateUserNameOrEmail, verifySignU
             res.status(500).send({ message: "error saving user" });
             return;
           }
+          console.log(user);
           return res.status(201).send({ redirectUrl: "/Login", message: "User Registered!" });
         });
       });
@@ -209,7 +211,7 @@ app.post('/ForgetPasswordEmail', (req, res) => {
 app.get('/ForgetPassword/:userId/:token', (req, res) => {
   Token.findOne({ token: req.params.token }).then((token) => {
     if (!token) {
-      return res.status(404).send({ err: "Sorry, Page Not Found" })
+      return res.status(404).send({ err: "invald token or expired" })
     }
     return res.status(200).send({ message: "ok" })
   })
@@ -257,7 +259,7 @@ app.post('/ForgetPassword/:userId/:token', async (req, res) => {
             res.status(500).send({ message: "Error in changing password" })
           }
           Token.findOneAndDelete({ userId: req.params.userId }).then((token) => {
-            return res.status(410).send({ message: "token deleted!" })
+             res.status(410).send({ message: "token deleted!" })
           })
         })
       })
@@ -288,6 +290,7 @@ app.get('/getUser/:employeeId', authJwt.verifyToken, authJwt.isAdmin, (req, res)
   User.findOne({ employeeId: req.params.employeeId }).then((user) => {
     if (!user) {
       return res.status(404).send({ message: "user not found " })
+      
     } res.send({ user:{userName:user.userName,firstName:user.firstName,status:user.status,lastName:user.lastName,openingDate:user.openingDate,lastUpdater:user.lastUpdater,email:user.email,team:user.team,employeeId:user.employeeId} });
   }).catch(() => {
     res.status(500).send({ message: "error" })
@@ -377,7 +380,7 @@ app.post('/addUser', verifySignUp.checkDuplicateUserNameOrEmail, verifySignUp.ch
 
   let resetToken = crypto.randomBytes(32).toString("hex");
   const hash = crypto.pbkdf2Sync(resetToken, process.env.SECRET,
-    10, 64, `sha512`).toString(`hex`)
+    100000, 64, `sha512`).toString(`hex`)
 
   MongoClient.connect(process.env.DB_URL, (err, db) => {
     if (err) {
@@ -446,10 +449,9 @@ app.put('/updateUser/:id', authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
 
 app.get("/getUser", authJwt.verifyToken, authJwt.isAdmin, (req, res) => {
   User.find((err, docs) => {
-
     if (!err) {
       res.send(docs)
-
+      // {userInfo:{userName:docs.userName,firstName:docs.firstName,lastName:docs.lastName,status:docs.status,openingDate:docs.openingDate,email:docs.email,team:docs.team,employeeId:docs.employeeId}}
     } else {
       res.sendStatus(404)
       console.log("not getting info : " + err);
