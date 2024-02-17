@@ -100,7 +100,6 @@ app.post("/user/signup", verifySignUp.checkDuplicateUserNameOrEmail, verifySignU
             res.status(500).send({ message: "error saving user" });
             return;
           }
-          console.log(user);
           return res.status(201).send({ redirectUrl: "/Login", message: "User Registered!" });
         });
       });
